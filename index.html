@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Résa.SREF – Réservation de créneaux</title>
+<style>
+:root{--bleu:#1b3a5c;--bleu2:#2c5f8a;--fond:#f6f4ef;--blanc:#fff;--texte:#1a1a1a;--gris:#555d6b;--bord:#c9ced6;--ok:#14663a;--err:#a31616;--accent:#e0a030}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;font:1.05rem/1.55 "Segoe UI",Arial,sans-serif;background:var(--fond);color:var(--texte)}
+.skip{position:absolute;left:-999px}.skip:focus{left:8px;top:8px;background:#fff;padding:.5rem;z-index:10}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+header{background:var(--bleu);color:#fff;padding:1.2rem 1rem;text-align:center}
+header h1{margin:0;font-size:1.9rem;letter-spacing:.03em}
+header p{margin:.3rem 0 0;opacity:.9}
+main{max-width:760px;margin:1.5rem auto;padding:0 1rem}
+main:focus{outline:none}
+.card{background:var(--blanc);border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.1);padding:1.5rem}
+h2{margin:0 0 1rem;color:var(--bleu);font-size:1.4rem}
+h3{color:var(--bleu);margin:1.4rem 0 .5rem;font-size:1.15rem}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+button,input,select,textarea{font:inherit}
+.btn,.btn-grand,.choix-btn,.tab{cursor:pointer}
+.btn{display:inline-block;padding:.7rem 1.3rem;border-radius:9px;border:2px solid var(--bleu);background:var(--bleu);color:#fff;font-weight:600;min-height:44px}
+.btn:hover{background:var(--bleu2);border-color:var(--bleu2)}
+.btn.sec{background:#fff;color:var(--bleu)}.btn.sec:hover{background:#eef2f7}
+.btn.danger{background:var(--err);border-color:var(--err)}
+.btn.gros{font-size:1.2rem;padding:1rem 1.6rem}
+.actions{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:1.4rem}
+.choix{display:grid;gap:1rem}
+.btn-grand{display:block;width:100%;text-align:left;padding:1.2rem 1.4rem;border:2px solid var(--bleu2);border-radius:12px;background:#fff;color:var(--bleu)}
+.btn-grand strong{display:block;font-size:1.25rem}.btn-grand span{color:var(--gris)}
+.btn-grand:hover{background:var(--bleu);color:#fff}.btn-grand:hover span{color:#fff}
+.liste{list-style:none;margin:0;padding:0;display:grid;gap:.6rem}
+.choix-btn{display:flex;justify-content:space-between;gap:1rem;width:100%;text-align:left;padding:.9rem 1.1rem;border:2px solid var(--bleu2);border-radius:10px;background:#fff;color:var(--bleu);font-weight:600;min-height:48px}
+.choix-btn:hover{background:var(--bleu);color:#fff}
+.choix-btn .etat{font-weight:400}
+.choix-btn[aria-disabled=true]{background:#e6e8ec;border-color:#e6e8ec;color:var(--gris);cursor:not-allowed}
+fieldset{border:0;margin:0;padding:0}legend{font-weight:700;color:var(--bleu);margin-bottom:.6rem}
+.slot{display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;border:2px solid var(--bleu2);border-radius:10px;margin-bottom:.6rem;background:#fff;cursor:pointer;min-height:48px}
+.slot input{width:22px;height:22px;accent-color:var(--bleu)}
+.slot .etat{margin-left:auto;color:var(--gris)}
+.slot.off{background:#e6e8ec;border-color:#e6e8ec;color:var(--gris);cursor:not-allowed}
+.slot:has(input:checked){background:#e4edf7;border-color:var(--bleu)}
+label{font-weight:600}
+.champ{margin-bottom:1.1rem}.champ label{display:block;margin-bottom:.3rem}
+input[type=text],input[type=email],input[type=password],input[type=date],input[type=time],input[type=number],select,textarea{width:100%;padding:.65rem .8rem;border:2px solid var(--bord);border-radius:8px;background:#fff;min-height:44px}
+.rappel{display:flex;gap:.6rem;align-items:center;margin-top:.5rem}.rappel label{font-weight:400}.rappel input{width:20px;height:20px}
+.msg{padding:.8rem 1rem;border-radius:9px;margin:0 0 1rem;font-weight:600}
+.msg.err{background:#fde8e8;color:var(--err);border:1px solid #f1a9a9}
+.msg.ok{background:#e1f4e8;color:var(--ok);border:1px solid #9fd5b3}
+.msg.info{background:#e4edf7;color:var(--bleu);border:1px solid #b5cae3}
+dl{display:grid;grid-template-columns:max-content 1fr;gap:.4rem 1.2rem;background:var(--fond);padding:1rem;border-radius:10px}
+dt{color:var(--gris)}dd{margin:0;font-weight:600}
+.tabs{list-style:none;display:flex;flex-wrap:wrap;gap:.4rem;padding:0;margin:0 0 1.2rem}
+.tab{padding:.5rem .9rem;border:2px solid var(--bord);border-radius:8px;background:#fff;color:var(--bleu);font-weight:600;min-height:44px}
+.tab[aria-current=page]{background:var(--bleu);color:#fff;border-color:var(--bleu)}
+.slotcard{border:1px solid var(--bord);border-radius:10px;padding:.8rem 1rem;margin-bottom:.7rem}
+.slotcard h4{margin:0 0 .3rem;color:var(--bleu)}
+.slotcard ul{margin:.3rem 0 0;padding-left:1.2rem}
+.badge{display:inline-block;padding:.1rem .6rem;border-radius:99px;font-size:.85rem;font-weight:600;background:#e1f4e8;color:var(--ok)}
+.badge.plein{background:#fde8e8;color:var(--err)}
+table{border-collapse:collapse;width:100%}th,td{border:1px solid var(--bord);padding:.4rem .6rem;text-align:left}caption{text-align:left;font-weight:700;margin:.8rem 0 .3rem;color:var(--bleu)}
+.lien{background:none;border:0;color:var(--bleu);text-decoration:underline;cursor:pointer;padding:.5rem}
+footer{text-align:center;padding:1.5rem 1rem;color:var(--gris)}
+.journal li{padding:.5rem .8rem;background:var(--fond);border-radius:8px;margin-bottom:.4rem}
+.journal small{display:block;color:var(--gris)}
+@media (max-width:520px){dl{grid-template-columns:1fr}.card{padding:1.1rem}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#app">Aller au contenu</a>
+<header><h1>Résa.SREF</h1><p>Réservation de créneaux · Salles de remise en forme</p></header>
+<main id="app" tabindex="-1"><noscript>Ce site nécessite JavaScript.</noscript></main>
+<div id="live" class="sr-only" role="status" aria-live="polite"></div>
+<footer><button class="lien" data-act="admin">Espace administrateur</button></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4.4.1/dist/email.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+'use strict';
+/* ====================== CONFIGURATION ====================== */
+const CONFIG = {
+  PROXY_URL: 'https://steep-frost-cb5e.pnjst9nf55.workers.dev',   // relais Cloudflare : il détient le jeton Airtable
+  AIRTABLE_BASE: 'appKZpxOpugzYhRTV',
+  EMAILJS_PUBLIC_KEY: 'qrm4ufE6HIdEP1WhC',
+  EMAILJS_SERVICE: 'réservation',
+  TEMPLATE_CONFIRMATION: 'template_1jf7lt8',   // variables : prenom, nom, date, creneau_debut, creneau_fin, lien_annulation, to_email
+  TEMPLATE_NOTIFICATION: 'template_1wihay6'    // variables : sujet, message, to_email
+};
+
+/* ====================== OUTILS ====================== */
+const app = document.getElementById('app');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+const pad = n => String(n).padStart(2, '0');
+const isoOf = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const todayISO = () => isoOf(new Date());
+const nowHM = () => { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+function normTime(t){ const m = String(t||'').trim().match(/^(\d{1,2})\s*(?:[:hH]\s*(\d{2})?)?$/); return m ? `${pad(+m[1])}:${m[2]||'00'}` : String(t||'').trim(); }
+function fmtDate(iso){ const [y,m,d] = iso.split('-').map(Number); return new Date(y,m-1,d).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); }
+function fmtShort(iso){ const [y,m,d] = iso.split('-'); return `${d}/${m}/${y}`; }
+const cmpSlot = (a,b) => (a.date+a.debut).localeCompare(b.date+b.debut);
+const plural = (n, s, p) => n > 1 ? p : s;
+const emailOk = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+const store = {
+  get(k){ try{ return localStorage.getItem(k) || ''; }catch{ return ''; } },
+  set(k,v){ try{ v ? localStorage.setItem(k,v) : localStorage.removeItem(k); }catch{} }
+};
+function announce(t){ const l = document.getElementById('live'); l.textContent = ''; setTimeout(() => l.textContent = t, 50); }
+function show(html){ app.innerHTML = html; const h = app.querySelector('h2'); if(h){ h.tabIndex = -1; h.focus(); } window.scrollTo(0,0); }
+const card = h => `<section class="card">${h}</section>`;
+const msg = (t, x) => x ? `<p class="msg ${t}">${esc(x)}</p>` : '';
+const loading = (t='Un instant…') => { app.innerHTML = card(`<p>${esc(t)}</p>`); announce(t); };
+const btn = (act, label, cls='', extra='') => `<button type="button" class="btn ${cls}" data-act="${act}" ${extra}>${label}</button>`;
+
+/* ====================== AIRTABLE ====================== */
+const API = CONFIG.PROXY_URL + '/v0';
+const BASE = CONFIG.AIRTABLE_BASE;
+async function at(path, opt = {}){
+  const r = await fetch(API + path, {...opt, headers: opt.body ? {'Content-Type': 'application/json'} : {}});
+  let data = null; try{ data = await r.json(); }catch{}
+  if(!r.ok){ const e = new Error(data?.error?.message || ('Erreur ' + r.status)); e.status = r.status; e.kind = data?.error?.type; throw e; }
+  return data;
+}
+
+/* Les noms de tables et de colonnes sont lus dans Airtable : majuscules, accents, tirets bas ou espaces n'ont pas d'importance. */
+const DEF = {
+  reservations:{label:'Réservations', names:['reservation','reservations'], needed:['nom','prenom','email','date','debut','fin','statut','token'], fields:{
+    nom:['nom','name'], prenom:['prenom'], email:['email','mail','adressemail','adresseemail','courriel'], date:['date'],
+    debut:['creneaudebut','heuredebut','debut'], fin:['creneaufin','heurefin','fin'], statut:['statut','status'],
+    token:['tokenannulation','token'], datereservation:['datereservation','datedereservation']}},
+  creneaux:{label:'Créneaux', names:['creneaux','creneau'], needed:['date','debut','fin','capacite'], fields:{
+    date:['date'], debut:['heuredebut','debut','creneaudebut'], fin:['heurefin','fin','creneaufin'],
+    capacite:['capacitemax','capacite','places','nombredeplaces'], actif:['actif']}},
+  administrateurs:{label:'Administrateurs', names:['administrateurs','administrateur','admins'], needed:['nom','prenom','email','pin'], fields:{
+    nom:['nom','name'], prenom:['prenom'], email:['email','mail','adressemail','adresseemail','courriel'], pin:['pin','codepin','code'], actif:['actif']}},
+  journal:{label:'Journal', names:['journal','log'], needed:['admin','action'], fields:{
+    admin:['administrateur','admin'], action:['action'], details:['details','detail']}},
+  fermetures:{label:'Fermetures', names:['fermetures','fermeture'], needed:['date','journee'], fields:{
+    date:['date'], debut:['heuredebut','debut'], fin:['heurefin','fin'], journee:['toutelajournee','journeeentiere','journee'],
+    motif:['motif'], creepar:['creepar','par']}}
+};
+let SCHEMA = {};
+async function loadSchema(){
+  const d = await at(`/meta/bases/${BASE}/tables`);
+  SCHEMA = {};
+  for(const [key, def] of Object.entries(DEF)){
+    const t = d.tables.find(t => def.names.includes(norm(t.name)));
+    const s = SCHEMA[key] = {label: def.label, id: t?.id, realName: t?.name, fields: {}, absent: [], missingTable: !t};
+    if(!t){ s.absent = def.needed.slice(); continue; }
+    for(const [lk, cands] of Object.entries(def.fields)){
+      let found = null;
+      for(const c of cands){ found = t.fields.find(f => norm(f.name) === c); if(found) break; }
+      if(found) s.fields[lk] = found.name;
+    }
+    s.absent = def.needed.filter(k => !s.fields[k]);
+  }
+}
+
+const toReal = (key, f) => { const o = {}; for(const [k,v] of Object.entries(f)){ const n = SCHEMA[key].fields[k]; if(n && v !== undefined) o[n] = v; } return o; };
+const gf = (rec, key, k) => rec.fields[SCHEMA[key].fields[k]];
+async function listAll(key){
+  let out = [], off;
+  do{
+    const d = await at(`/${BASE}/${SCHEMA[key].id}?pageSize=100` + (off ? `&offset=${encodeURIComponent(off)}` : ''));
+    out = out.concat(d.records); off = d.offset;
+  }while(off);
+  return out;
+}
+async function createRecs(key, list){
+  const res = [];
+  for(let i = 0; i < list.length; i += 10){
+    const records = list.slice(i, i+10).map(f => ({fields: toReal(key, f)}));
+    res.push(...(await at(`/${BASE}/${SCHEMA[key].id}`, {method:'POST', body: JSON.stringify({records, typecast:true})})).records);
+  }
+  return res;
+}
+async function updateRecs(key, list){
+  for(let i = 0; i < list.length; i += 10){
+    const records = list.slice(i, i+10).map(x => ({id: x.id, fields: toReal(key, x.f)}));
+    await at(`/${BASE}/${SCHEMA[key].id}`, {method:'PATCH', body: JSON.stringify({records, typecast:true})});
+  }
+}
+async function deleteRecs(key, ids){
+  for(let i = 0; i < ids.length; i += 10){
+    const q = ids.slice(i, i+10).map(id => 'records[]=' + encodeURIComponent(id)).join('&');
+    await at(`/${BASE}/${SCHEMA[key].id}?${q}`, {method:'DELETE'});
+  }
+}
+
+/* ====================== MODÈLE ====================== */
+function parseResa(r){
+  const f = k => gf(r,'reservations',k);
+  const raw = f('statut');
+  return {id:r.id, nom:f('nom')||'', prenom:f('prenom')||'', email:String(f('email')||'').trim(), date:String(f('date')||'').slice(0,10),
+    debut:normTime(f('debut')), fin:normTime(f('fin')), statutRaw: raw || 'Confirmée', ok: !raw || norm(raw) === 'confirmee', token:f('token')||''};
+}
+function parseSlot(r){
+  const f = k => gf(r,'creneaux',k);
+  return {id:r.id, date:String(f('date')||'').slice(0,10), debut:normTime(f('debut')), fin:normTime(f('fin')), cap:Number(f('capacite'))||0,
+    actif: SCHEMA.creneaux.fields.actif ? !!f('actif') : true};
+}
+function parseFerm(r){
+  const f = k => gf(r,'fermetures',k);
+  return {id:r.id, date:String(f('date')||'').slice(0,10), debut:normTime(f('debut')), fin:normTime(f('fin')), journee:!!f('journee')};
+}
+function parseAdmin(r){
+  const f = k => gf(r,'administrateurs',k);
+  const a = {id:r.id, nom:f('nom')||'', prenom:f('prenom')||'', email:String(f('email')||'').trim(), pin:String(f('pin')||''),
+    actif: SCHEMA.administrateurs.fields.actif ? !!f('actif') : true};
+  a.full = `${a.prenom} ${a.nom}`.trim();
+  return a;
+}
+const closedBy = (s, ferms) => ferms.some(x => x.date === s.date && (x.journee || (x.debut && x.fin && s.debut >= x.debut && s.fin <= x.fin)));
+async function loadPlanning(){
+  const [c, r, f] = await Promise.all([listAll('creneaux'), listAll('reservations'), listAll('fermetures')]);
+  const resas = r.map(parseResa).filter(x => x.ok);
+  const ferms = f.map(parseFerm);
+  const slots = c.map(parseSlot).filter(s => s.date && s.debut && s.fin && s.actif).map(s => {
+    s.people = resas.filter(x => x.date === s.date && x.debut === s.debut && x.fin === s.fin);
+    s.taken = s.people.length; s.left = Math.max(0, s.cap - s.taken);
+    s.full = s.taken >= s.cap; s.closed = closedBy(s, ferms); return s;
+  }).sort(cmpSlot);
+  return {slots, resas, ferms};
+}
+const upcoming = slots => { const t = todayISO(), n = nowHM(); return slots.filter(s => s.date > t || (s.date === t && s.debut > n)); };
+const loadAdmins = async () => (await listAll('administrateurs')).map(parseAdmin).filter(a => a.actif);
+
+/* ====================== CODES PIN ====================== */
+async function hashPin(pin){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('resa-sref|' + pin));
+  return 'sha256:' + [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2,'0')).join('');
+}
+async function pinMatches(stored, pin){ return !stored ? false : stored.startsWith('sha256:') ? stored === await hashPin(pin) : stored === pin; }
+
+/* ====================== E-MAILS ====================== */
+async function mail(template, params){
+  try{
+    if(typeof emailjs === 'undefined') throw {text:'Service e-mail non chargé'};
+    await emailjs.send(CONFIG.EMAILJS_SERVICE, template, params);
+    return {ok:true};
+  }catch(e){ return {ok:false, status:e.status, err: e.text || e.message || 'échec'}; }
+}
+const mailUser = (to, sujet, message) => mail(CONFIG.TEMPLATE_NOTIFICATION, {to_email:to, sujet, message});
+async function mailAdmins(sujet, message){
+  const to = (await loadAdmins()).map(a => a.email).filter(Boolean);
+  if(!to.length) return {ok:true};
+  const r = await mail(CONFIG.TEMPLATE_NOTIFICATION, {to_email: to.join(','), sujet, message});
+  if(r.ok || to.length === 1 || ![400,422].includes(r.status)) return r;
+  let ok = false; for(const t of to){ if((await mail(CONFIG.TEMPLATE_NOTIFICATION, {to_email:t, sujet, message})).ok) ok = true; }
+  return {ok};
+}
+async function logAction(action, details){
+  try{ await createRecs('journal', [{admin: S.admin.full, action, details}]); }catch{}
+}
+
+/* ====================== ÉTAT ET NAVIGATION ====================== */
+const S = {plan:null, date:null, sel:[], who:{prenom:'', nom:'', email: store.get('resa-sref-email')}, cancelList:[], cancel:null, admin:null, ferm:null};
+const A = {};
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if(!el || el.getAttribute('aria-disabled') === 'true') return;
+  const fn = A[el.dataset.act]; if(fn){ e.preventDefault(); run(() => fn(el.dataset, el)); }
+});
+document.addEventListener('submit', e => {
+  const f = e.target.closest('[data-form]'); if(!f) return; e.preventDefault();
+  const fn = A[f.dataset.form]; if(fn) run(() => fn(new FormData(f), f));
+});
+document.addEventListener('change', e => {
+  if(e.target.id === 'f-all') document.querySelectorAll('input[name=slot]:not(:disabled)').forEach(c => c.checked = e.target.checked);
+  else if(e.target.name === 'slot' && !e.target.checked){ const a = document.getElementById('f-all'); if(a) a.checked = false; }
+});
+async function run(fn){
+  try{ await fn(); }catch(err){ showError(err); }
+}
+function showError(err){
+  const s = err.status;
+  const t = s === 401 ? 'Le jeton Airtable est refusé. Il faut en créer un nouveau.'
+    : s === 403 ? 'Airtable refuse cette opération : le jeton n\'a pas la permission nécessaire.'
+    : s === 429 ? 'Trop de demandes en même temps. Patientez quelques secondes puis réessayez.'
+    : s === 422 ? 'Airtable a refusé une donnée : ' + err.message
+    : 'Une erreur est survenue : ' + err.message;
+  announce(t);
+  show(card(`<h2>Une erreur est survenue</h2>${msg('err', t)}<div class="actions">${btn('home','Retour à l\'accueil')}</div>`));
+}
+
+/* ====================== ACCUEIL ====================== */
+function home(){
+  show(card(`<h2>Que souhaitez-vous faire ?</h2><div class="choix">
+    <button class="btn-grand" data-act="r-start"><strong>Réserver</strong><span>Choisir une date et un ou plusieurs créneaux</span></button>
+    <button class="btn-grand" data-act="a-start"><strong>Annuler</strong><span>Annuler une réservation existante</span></button></div>`));
+}
+A.home = home;
+
+/* ====================== RÉSERVER ====================== */
+A['r-start'] = async () => { loading('Chargement des dates disponibles…'); S.plan = await loadPlanning(); S.sel = []; renderDates(); };
+function renderDates(){
+  const ups = upcoming(S.plan.slots), dates = [...new Set(ups.map(s => s.date))].sort();
+  if(!dates.length) return show(card(`<h2>Aucune date disponible</h2><p>Aucun créneau n'est ouvert à la réservation pour le moment.</p><div class="actions">${btn('home','Retour','sec')}</div>`));
+  const items = dates.map(d => {
+    const n = ups.filter(s => s.date === d && !s.full && !s.closed).length;
+    const etat = n ? `${n} ${plural(n,'créneau disponible','créneaux disponibles')}` : 'Complet';
+    return n ? `<li><button class="choix-btn" data-act="r-date" data-date="${d}"><span>${esc(fmtDate(d))}</span><span class="etat">${etat}</span></button></li>`
+             : `<li><button class="choix-btn" aria-disabled="true"><span>${esc(fmtDate(d))}</span><span class="etat">Complet, indisponible</span></button></li>`;
+  }).join('');
+  show(card(`<h2>Étape 1 sur 4 : choisir une date</h2><ul class="liste">${items}</ul><div class="actions">${btn('home','Retour','sec')}</div>`));
+}
+A['r-date'] = d => { S.date = d.date; S.sel = []; renderSlots(); };
+function renderSlots(err){
+  const slots = upcoming(S.plan.slots).filter(s => s.date === S.date);
+  const items = slots.map(s => {
+    const off = s.full || s.closed;
+    const etat = s.closed ? 'Fermé, indisponible' : s.full ? 'Complet, indisponible' : `${s.left} ${plural(s.left,'place restante','places restantes')}`;
+    return `<label class="slot ${off ? 'off' : ''}"><input type="checkbox" name="slot" value="${s.id}" ${off ? 'disabled' : ''} ${S.sel.includes(s.id) && !off ? 'checked' : ''}>
+      <span>${s.debut} à ${s.fin}</span><span class="etat">${etat}</span></label>`;
+  }).join('');
+  show(card(`<h2>Étape 2 sur 4 : choisir un ou plusieurs créneaux</h2>${msg('err', err)}
+    <form data-form="r-slots"><fieldset><legend>Créneaux du ${esc(fmtDate(S.date))}</legend>${items}</fieldset>
+    <div class="actions">${btn('r-back-dates','Retour','sec')}<button class="btn" type="submit">Continuer</button></div></form>`));
+  if(err) announce(err);
+}
+A['r-back-dates'] = renderDates;
+A['r-slots'] = fd => { const ids = fd.getAll('slot'); if(!ids.length) return renderSlots('Choisissez au moins un créneau.'); S.sel = ids; renderWho(); };
+function renderWho(err){
+  const w = S.who;
+  show(card(`<h2>Étape 3 sur 4 : vos coordonnées</h2>${msg('err', err)}
+    <form data-form="r-who" novalidate>
+    <div class="champ"><label for="prenom">Prénom</label><input id="prenom" name="prenom" type="text" autocomplete="given-name" required value="${esc(w.prenom)}"></div>
+    <div class="champ"><label for="nom">Nom</label><input id="nom" name="nom" type="text" autocomplete="family-name" required value="${esc(w.nom)}"></div>
+    <div class="champ"><label for="email">Adresse e-mail</label><input id="email" name="email" type="email" autocomplete="email" required value="${esc(w.email)}">
+      <div class="rappel"><input id="rappel" name="rappel" type="checkbox" ${store.get('resa-sref-email') ? 'checked' : ''}><label for="rappel">Se souvenir de moi sur cet appareil</label></div></div>
+    <div class="actions">${btn('r-back-slots','Retour','sec')}<button class="btn" type="submit">Continuer</button></div></form>`));
+  if(err) announce(err);
+}
+A['r-back-slots'] = () => renderSlots();
+A['r-who'] = fd => {
+  const w = {prenom: fd.get('prenom').trim(), nom: fd.get('nom').trim(), email: fd.get('email').trim()};
+  S.who = w; store.set('resa-sref-email', fd.get('rappel') ? w.email : '');
+  if(!w.prenom || !w.nom) return renderWho('Renseignez votre prénom et votre nom.');
+  if(!emailOk(w.email)) return renderWho('L\'adresse e-mail n\'est pas valide.');
+  renderRecap();
+};
+const chosen = () => S.sel.map(id => S.plan.slots.find(s => s.id === id)).filter(Boolean).sort(cmpSlot);
+function renderRecap(){
+  const w = S.who;
+  show(card(`<h2>Étape 4 sur 4 : vérifier et confirmer</h2>
+    <dl><dt>Nom</dt><dd>${esc(w.prenom)} ${esc(w.nom)}</dd><dt>E-mail</dt><dd>${esc(w.email)}</dd><dt>Date</dt><dd>${esc(fmtDate(S.date))}</dd>
+    <dt>${S.sel.length > 1 ? 'Créneaux' : 'Créneau'}</dt><dd>${chosen().map(s => `${s.debut} à ${s.fin}`).join(', ')}</dd></dl>
+    <p>Un e-mail de confirmation vous sera envoyé, avec un lien pour annuler.</p>
+    <div class="actions">${btn('r-back-who','Modifier','sec')}${btn('r-confirm','Confirmer la réservation','gros')}</div>`));
+}
+A['r-back-who'] = () => renderWho();
+A['r-confirm'] = async () => {
+  loading('Enregistrement de votre réservation…');
+  const plan = S.plan = await loadPlanning(), w = S.who, bad = [], good = [];
+  for(const id of S.sel){
+    const s = plan.slots.find(x => x.id === id);
+    if(!s || s.full || s.closed) bad.push(s ? `${s.debut} à ${s.fin}` : 'un créneau supprimé');
+    else if(plan.resas.some(r => r.email.toLowerCase() === w.email.toLowerCase() && r.date === s.date && r.debut === s.debut && r.fin === s.fin)) bad.push(`${s.debut} à ${s.fin} (vous l'avez déjà réservé)`);
+    else good.push(s);
+  }
+  if(bad.length){ S.sel = good.map(s => s.id); return renderSlots(`Désolé, ce créneau n'est plus disponible : ${bad.join(' ; ')}. Vérifiez votre choix.`); }
+  const rand = () => crypto.randomUUID().replace(/-/g,'').slice(0,16);
+  const rows = good.map(s => ({nom:w.nom, prenom:w.prenom, email:w.email, date:s.date, debut:s.debut, fin:s.fin, statut:'Confirmée', token:rand(), datereservation:new Date().toISOString()}));
+  await createRecs('reservations', rows);
+  let fails = 0;
+  for(const r of rows){
+    const m = await mail(CONFIG.TEMPLATE_CONFIRMATION, {prenom:w.prenom, nom:w.nom, to_email:w.email, date:fmtDate(r.date), creneau_debut:r.debut, creneau_fin:r.fin,
+      lien_annulation: `${location.origin}${location.pathname}?annuler=${r.token}`});
+    if(!m.ok) fails++;
+  }
+  const liste = rows.map(r => `- ${fmtDate(r.date)}, ${r.debut} à ${r.fin}`).join('\n');
+  await mailAdmins(`Nouvelle réservation – ${fmtShort(rows[0].date)}`, `${w.prenom} ${w.nom} (${w.email}) a réservé :\n${liste}`);
+  S.sel = [];
+  show(card(`<h2>Réservation confirmée</h2>${msg('ok', `${rows.length} ${plural(rows.length,'créneau réservé','créneaux réservés')} pour le ${fmtDate(rows[0].date)}.`)}
+    ${fails ? msg('err', 'Votre réservation est bien enregistrée, mais l\'e-mail de confirmation n\'a pas pu être envoyé. Notez bien la date et l\'heure.') : `<p>Un e-mail de confirmation a été envoyé à ${esc(w.email)}.</p>`}
+    <ul>${rows.map(r => `<li>${esc(r.debut)} à ${esc(r.fin)}</li>`).join('')}</ul>
+    <div class="actions">${btn('r-start','Réserver un autre créneau')}${btn('home','Retour à l\'accueil','sec')}</div>`));
+};
+
+/* ====================== ANNULER ====================== */
+A['a-start'] = () => renderCancelEmail();
+function renderCancelEmail(err){
+  show(card(`<h2>Annuler : saisissez votre adresse e-mail</h2>${msg('err', err)}
+    <form data-form="a-email" novalidate><div class="champ"><label for="email">Adresse e-mail utilisée pour la réservation</label>
+    <input id="email" name="email" type="email" autocomplete="email" required value="${esc(S.who.email)}">
+    <div class="rappel"><input id="rappel" name="rappel" type="checkbox" ${store.get('resa-sref-email') ? 'checked' : ''}><label for="rappel">Se souvenir de moi sur cet appareil</label></div></div>
+    <div class="actions">${btn('home','Retour','sec')}<button class="btn" type="submit">Rechercher mes réservations</button></div></form>`));
+  if(err) announce(err);
+}
+A['a-email'] = async fd => {
+  const email = fd.get('email').trim(); S.who.email = email; store.set('resa-sref-email', fd.get('rappel') ? email : '');
+  if(!emailOk(email)) return renderCancelEmail('L\'adresse e-mail n\'est pas valide.');
+  loading('Recherche de vos réservations…');
+  const t = todayISO();
+  S.cancelList = (await listAll('reservations')).map(parseResa).filter(r => r.ok && r.email.toLowerCase() === email.toLowerCase() && r.date >= t).sort(cmpSlot);
+  renderCancelList();
+};
+function renderCancelList(){
+  if(!S.cancelList.length) return show(card(`<h2>Aucune réservation à venir</h2><p>Aucune réservation à venir n'est enregistrée pour ${esc(S.who.email)}.</p><div class="actions">${btn('a-start','Essayer une autre adresse','sec')}${btn('home','Accueil','sec')}</div>`));
+  show(card(`<h2>Choisissez la réservation à annuler</h2><ul class="liste">${S.cancelList.map(r =>
+    `<li><button class="choix-btn" data-act="a-pick" data-id="${r.id}"><span>${esc(fmtDate(r.date))}, ${r.debut} à ${r.fin}</span><span class="etat">Annuler</span></button></li>`).join('')}</ul>
+    <div class="actions">${btn('a-start','Retour','sec')}</div>`));
+}
+A['a-pick'] = d => { S.cancel = S.cancelList.find(r => r.id === d.id); renderCancelConfirm(); };
+function renderCancelConfirm(){
+  const r = S.cancel;
+  show(card(`<h2>Confirmer l'annulation</h2><dl><dt>Date</dt><dd>${esc(fmtDate(r.date))}</dd><dt>Créneau</dt><dd>${r.debut} à ${r.fin}</dd><dt>Réservé par</dt><dd>${esc(r.prenom)} ${esc(r.nom)}</dd></dl>
+    <div class="actions">${btn('home','Non, garder ma réservation','sec')}${btn('a-confirm','Oui, annuler cette réservation','danger gros')}</div>`));
+}
+A['a-confirm'] = async () => {
+  loading('Annulation en cours…');
+  const r = S.cancel;
+  await updateRecs('reservations', [{id:r.id, f:{statut:'Annulée'}}]);
+  const txt = `${fmtDate(r.date)}, ${r.debut} à ${r.fin}`;
+  const mu = await mailUser(r.email, 'Annulation de votre réservation – Résa.SREF', `Bonjour ${r.prenom} ${r.nom},\n\nVotre réservation du ${txt} a bien été annulée.\n\nL'équipe Résa.SREF`);
+  await mailAdmins(`Annulation – ${fmtShort(r.date)}`, `${r.prenom} ${r.nom} (${r.email}) a annulé sa réservation : ${txt}. Une place est libre.`);
+  show(card(`<h2>Réservation annulée</h2>${msg('ok', `Votre réservation du ${txt} est annulée.`)}${mu.ok ? '' : msg('info','L\'e-mail de confirmation n\'a pas pu être envoyé, mais l\'annulation est bien enregistrée.')}
+    <div class="actions">${btn('home','Retour à l\'accueil')}</div>`));
+};
+async function cancelByLink(token){
+  loading('Vérification du lien…');
+  const r = (await listAll('reservations')).map(parseResa).find(x => x.token === token && x.ok);
+  if(!r) return show(card(`<h2>Lien d'annulation invalide</h2><p>Ce lien est incorrect, ou la réservation est déjà annulée.</p><div class="actions">${btn('home','Retour à l\'accueil')}</div>`));
+  S.cancel = r; S.who.email = r.email; renderCancelConfirm();
+}
+
+/* ====================== ADMINISTRATION : CONNEXION ====================== */
+A.admin = async () => {
+  if(S.admin) return adminTab('planning');
+  loading(); const admins = await loadAdmins(); renderLogin(admins);
+};
+function renderLogin(admins, err){
+  if(!admins.length) return show(card(`<h2>Créer le premier administrateur</h2><p>Aucun administrateur n'existe encore. Le compte créé ici aura accès à toute l'administration.</p>${msg('err', err)}${adminForm('first-admin','Créer et me connecter')}`));
+  show(card(`<h2>Espace administrateur</h2>${msg('err', err)}<form data-form="login" novalidate>
+    <div class="champ"><label for="pin">Code PIN à 4 chiffres</label><input id="pin" name="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" required></div>
+    <div class="actions">${btn('home','Retour','sec')}<button class="btn" type="submit">Se connecter</button></div></form>`));
+  if(err) announce(err);
+}
+const adminForm = (act, label) => `<form data-form="${act}" novalidate>
+  <div class="champ"><label for="a-prenom">Prénom</label><input id="a-prenom" name="prenom" type="text" required></div>
+  <div class="champ"><label for="a-nom">Nom</label><input id="a-nom" name="nom" type="text" required></div>
+  <div class="champ"><label for="a-email">Adresse e-mail</label><input id="a-email" name="email" type="email" required></div>
+  <div class="champ"><label for="a-pin">Code PIN à 4 chiffres</label><input id="a-pin" name="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="new-password" required></div>
+  <div class="actions"><button class="btn" type="submit">${label}</button></div></form>`;
+A.login = async fd => {
+  const pin = fd.get('pin').trim(); const admins = await loadAdmins();
+  let found = null; for(const a of admins){ if(await pinMatches(a.pin, pin)){ found = a; break; } }
+  if(!found){ await new Promise(r => setTimeout(r, 800)); return renderLogin(admins, 'Code PIN incorrect.'); }
+  S.admin = found; adminTab('planning');
+};
+async function newAdminRecord(fd, admins){
+  const o = {prenom: fd.get('prenom').trim(), nom: fd.get('nom').trim(), email: fd.get('email').trim(), pin: fd.get('pin').trim()};
+  if(!o.prenom || !o.nom) return {err:'Renseignez le prénom et le nom.'};
+  if(!emailOk(o.email)) return {err:'L\'adresse e-mail n\'est pas valide.'};
+  if(!/^\d{4}$/.test(o.pin)) return {err:'Le code PIN doit comporter exactement 4 chiffres.'};
+  for(const a of admins) if(await pinMatches(a.pin, o.pin)) return {err:'Ce code PIN est déjà utilisé par un autre administrateur. Choisissez-en un autre.'};
+  const h = await hashPin(o.pin);
+  const [rec] = await createRecs('administrateurs', [{nom:o.nom, prenom:o.prenom, email:o.email, pin:h, actif:true}]);
+  return {admin: parseAdmin(rec), o};
+}
+A['first-admin'] = async fd => {
+  const admins = await loadAdmins(); if(admins.length) return renderLogin(admins);
+  const r = await newAdminRecord(fd, admins); if(r.err) return renderLogin([], r.err);
+  S.admin = r.admin; await logAction('Création du premier administrateur', r.admin.full); adminTab('planning');
+};
+
+/* ====================== ADMINISTRATION : STRUCTURE ====================== */
+const TABS = [['planning','Planning'],['creneaux','Créneaux'],['fermeture','Fermeture exceptionnelle'],['admins','Administrateurs'],['journal','Journal'],['export','Export Excel'],['diag','Diagnostic']];
+function shell(tab, inner){
+  const title = TABS.find(t => t[0] === tab)[1];
+  show(`<section class="card"><p>Connecté : <strong>${esc(S.admin.full)}</strong></p>
+    <nav aria-label="Sections de l'administration"><ul class="tabs">${TABS.map(([k,l]) => `<li><button class="tab" data-act="tab" data-tab="${k}" ${k === tab ? 'aria-current="page"' : ''}>${l}</button></li>`).join('')}
+    <li><button class="tab" data-act="logout">Se déconnecter</button></li></ul></nav><h2>${title}</h2>${inner}</section>`);
+}
+A.tab = d => adminTab(d.tab);
+A.logout = () => { S.admin = null; home(); };
+async function adminTab(tab, note){
+  loading();
+  const f = {planning:tabPlanning, creneaux:tabCreneaux, fermeture:tabFermeture, admins:tabAdmins, journal:tabJournal, export:tabExport, diag:tabDiag}[tab];
+  const inner = await f();
+  shell(tab, msg(note?.t || 'ok', note?.m) + inner);
+  if(note) announce(note.m);
+}
+
+/* ----- Planning ----- */
+async function tabPlanning(){
+  const plan = await loadPlanning(); S.plan = plan;
+  const t = todayISO(), ups = plan.slots.filter(s => s.date >= t);
+  if(!ups.length) return '<p>Aucun créneau à venir. Ouvrez la section « Créneaux » pour en ajouter.</p>';
+  const days = [...new Set(ups.map(s => s.date))];
+  return days.map(d => `<h3>${esc(fmtDate(d))}</h3>` + ups.filter(s => s.date === d).map(s => `<div class="slotcard"><h4>${s.debut} à ${s.fin}
+    <span class="badge ${s.closed || s.full ? 'plein' : ''}">${s.closed ? 'Fermé' : `${s.taken} sur ${s.cap} ${plural(s.cap,'place','places')}`}</span></h4>
+    ${s.people.length ? `<ul>${s.people.map(p => `<li>${esc(p.prenom)} ${esc(p.nom)}, ${esc(p.email)}
+      <button class="lien" data-act="adm-cancel" data-id="${p.id}" aria-label="Annuler la réservation de ${esc(p.prenom)} ${esc(p.nom)} le ${esc(fmtShort(s.date))} à ${s.debut}">Annuler</button></li>`).join('')}</ul>` : '<p>Aucune inscription.</p>'}</div>`).join('')).join('');
+}
+A['adm-cancel'] = async d => {
+  const r = S.plan.resas.find(x => x.id === d.id); if(!r) return;
+  const txt = `${fmtDate(r.date)}, ${r.debut} à ${r.fin}`;
+  if(!confirm(`Annuler la réservation de ${r.prenom} ${r.nom} (${txt}) ? Un e-mail lui sera envoyé.`)) return;
+  loading();
+  await updateRecs('reservations', [{id:r.id, f:{statut:'Annulée'}}]);
+  const m = await mailUser(r.email, 'Annulation de votre réservation – Résa.SREF', `Bonjour ${r.prenom} ${r.nom},\n\nVotre réservation du ${txt} a été annulée par l'équipe.\n\nL'équipe Résa.SREF`);
+  await mailAdmins(`Annulation – ${fmtShort(r.date)}`, `${S.admin.full} a annulé la réservation de ${r.prenom} ${r.nom} (${txt}).`);
+  await logAction('Annulation de réservation', `${r.prenom} ${r.nom}, ${txt}`);
+  adminTab('planning', {t: m.ok ? 'ok' : 'info', m: m.ok ? 'Réservation annulée et personne prévenue.' : 'Réservation annulée, mais l\'e-mail n\'a pas pu être envoyé.'});
+};
+
+/* ----- Créneaux ----- */
+async function tabCreneaux(){
+  const plan = await loadPlanning(); S.plan = plan; const t = todayISO();
+  const days = [...new Set(plan.slots.filter(s => s.date >= t).map(s => s.date))];
+  return `<form data-form="cr-add" novalidate><h3>Ouvrir des créneaux d'une heure</h3>
+    <div class="champ"><label for="cr-date">Date</label><input id="cr-date" name="date" type="date" min="${t}" required></div>
+    <div class="champ"><label for="cr-o">Heure d'ouverture</label><input id="cr-o" name="o" type="time" required></div>
+    <div class="champ"><label for="cr-f">Heure de fermeture</label><input id="cr-f" name="f" type="time" required></div>
+    <div class="champ"><label for="cr-n">Nombre de places par créneau</label><input id="cr-n" name="n" type="number" min="1" max="200" required></div>
+    <div class="actions"><button class="btn" type="submit">Créer les créneaux</button></div></form>
+    <h3>Jours ouverts à la réservation</h3>${days.length ? `<ul class="liste">${days.map(d => {
+      const n = plan.slots.filter(s => s.date === d).length;
+      return `<li>${esc(fmtDate(d))} : ${n} ${plural(n,'créneau','créneaux')} ${btn('cr-del','Supprimer ce jour','sec',`data-date="${d}" aria-label="Supprimer les créneaux du ${esc(fmtDate(d))}"`)}</li>`; }).join('')}</ul>` : '<p>Aucun jour ouvert.</p>'}`;
+}
+A['cr-add'] = async fd => {
+  const date = fd.get('date'), o = fd.get('o'), f = fd.get('f'), n = parseInt(fd.get('n'), 10);
+  const bad = m => adminTab('creneaux', {t:'err', m});
+  if(!date || !o || !f || !(n > 0)) return bad('Renseignez la date, les heures et le nombre de places.');
+  const toMin = t => { const [h,m] = t.split(':').map(Number); return h*60+m; };
+  const fromMin = x => `${pad(Math.floor(x/60))}:${pad(x%60)}`;
+  const rows = []; for(let x = toMin(o); x + 60 <= toMin(f); x += 60) rows.push({date, debut: fromMin(x), fin: fromMin(x+60), capacite: n, actif: true});
+  if(!rows.length) return bad('L\'heure de fermeture doit être au moins une heure après l\'ouverture.');
+  loading();
+  const existing = (await listAll('creneaux')).map(parseSlot).filter(s => s.date === date);
+  const nouveaux = rows.filter(r => !existing.some(e => e.debut === r.debut));
+  if(!nouveaux.length) return bad('Ces créneaux existent déjà pour cette date.');
+  await createRecs('creneaux', nouveaux);
+  await logAction('Ouverture de créneaux', `${fmtShort(date)} de ${o} à ${f}, ${n} places, ${nouveaux.length} créneaux`);
+  adminTab('creneaux', {m: `${nouveaux.length} ${plural(nouveaux.length,'créneau créé','créneaux créés')} pour le ${fmtDate(date)}.`});
+};
+A['cr-del'] = async d => {
+  loading();
+  const plan = await loadPlanning(); const day = plan.slots.filter(s => s.date === d.date);
+  if(day.some(s => s.taken)) return adminTab('creneaux', {t:'err', m:`Des réservations existent le ${fmtDate(d.date)}. Utilisez « Fermeture exceptionnelle » pour prévenir les personnes.`});
+  if(!confirm(`Supprimer les ${day.length} créneaux du ${fmtDate(d.date)} ?`)) return adminTab('creneaux');
+  await deleteRecs('creneaux', day.map(s => s.id));
+  await logAction('Suppression de créneaux', `${fmtShort(d.date)}, ${day.length} créneaux`);
+  adminTab('creneaux', {m:'Créneaux supprimés.'});
+};
+
+/* ----- Fermeture exceptionnelle ----- */
+async function tabFermeture(){
+  S.ferm = null;
+  return `<form data-form="f-date" novalidate><p>Étape 1 sur 3 : choisir la date et les créneaux fermés.</p>
+    <div class="champ"><label for="f-d">Date de fermeture</label><input id="f-d" name="date" type="date" min="${todayISO()}" required></div>
+    <div class="actions"><button class="btn" type="submit">Afficher les créneaux de ce jour</button></div></form>`;
+}
+A['f-date'] = async fd => {
+  const date = fd.get('date'); if(!date) return adminTab('fermeture', {t:'err', m:'Choisissez une date.'});
+  loading(); const plan = S.plan = await loadPlanning();
+  S.ferm = {date, slots: plan.slots.filter(s => s.date === date)}; renderFermSlots();
+};
+function renderFermSlots(err){
+  const f = S.ferm;
+  shell('fermeture', `${msg('err', err)}<form data-form="f-slots"><p>Étape 1 sur 3 : fermeture du ${esc(fmtDate(f.date))}.</p><fieldset><legend>Créneaux à fermer</legend>
+    <label class="slot"><input type="checkbox" id="f-all" name="all" value="1"><span>Toute la journée</span></label>
+    ${f.slots.map(s => `<label class="slot ${s.closed ? 'off' : ''}"><input type="checkbox" name="slot" value="${s.id}" ${s.closed ? 'disabled' : ''}><span>${s.debut} à ${s.fin}</span>
+      <span class="etat">${s.closed ? 'Déjà fermé, indisponible' : `${s.taken} ${plural(s.taken,'inscrit','inscrits')}`}</span></label>`).join('')}</fieldset>
+    <div class="actions">${btn('tab','Annuler','sec','data-tab="fermeture"')}<button class="btn" type="submit">Voir l'impact</button></div></form>`);
+  if(err) announce(err);
+}
+A['f-slots'] = fd => {
+  const f = S.ferm, all = !!fd.get('all'), ids = fd.getAll('slot');
+  if(!all && !ids.length) return renderFermSlots('Cochez au moins un créneau, ou « Toute la journée ».');
+  f.all = all; f.chosen = all ? f.slots.filter(s => !s.closed) : f.slots.filter(s => ids.includes(s.id));
+  const plan = S.plan;
+  f.impact = plan.resas.filter(r => r.date === f.date && (all || f.chosen.some(s => s.debut === r.debut && s.fin === r.fin)));
+  const horaire = all ? 'toute la journée' : 'aux créneaux suivants : ' + f.chosen.map(s => `${s.debut}-${s.fin}`).join(', ');
+  f.message = `La salle sera exceptionnellement fermée le ${fmtDate(f.date)}, ${horaire}. Votre réservation est donc annulée. Nous vous prions de nous excuser pour la gêne occasionnée.`;
+  renderFermImpact();
+};
+function renderFermImpact(err){
+  const f = S.ferm, n = new Set(f.impact.map(r => r.email.toLowerCase())).size;
+  shell('fermeture', `<p>Étape 2 sur 3 : vérifier l'impact et le message.</p>${msg('err', err)}
+    <p><strong>${n} ${plural(n,'personne sera notifiée','personnes seront notifiées')}</strong> et ${f.impact.length} ${plural(f.impact.length,'réservation sera annulée','réservations seront annulées')}.</p>
+    ${f.impact.length ? `<table><caption>Personnes concernées</caption><thead><tr><th scope="col">Nom</th><th scope="col">E-mail</th><th scope="col">Créneau</th></tr></thead><tbody>${f.impact.map(r => `<tr><td>${esc(r.prenom)} ${esc(r.nom)}</td><td>${esc(r.email)}</td><td>${r.debut} à ${r.fin}</td></tr>`).join('')}</tbody></table>` : ''}
+    <form data-form="f-send"><div class="champ"><label for="f-msg">Message envoyé aux personnes concernées</label><textarea id="f-msg" name="message" rows="6">${esc(f.message)}</textarea></div>
+    <div class="actions">${btn('f-back','Retour','sec')}<button class="btn danger gros" type="submit">${n ? 'Envoyer les notifications' : 'Enregistrer la fermeture'}</button></div></form>`);
+  if(err) announce(err);
+}
+A['f-back'] = () => renderFermSlots();
+A['f-send'] = async fd => {
+  const f = S.ferm, message = fd.get('message').trim(); if(!message) return renderFermImpact('Le message ne peut pas être vide.');
+  loading('Envoi en cours, ne fermez pas la page…');
+  const rows = f.all ? [{date:f.date, journee:true, motif:message, creepar:S.admin.full}]
+    : f.chosen.map(s => ({date:f.date, debut:s.debut, fin:s.fin, journee:false, motif:message, creepar:S.admin.full}));
+  await createRecs('fermetures', rows);
+  if(f.impact.length) await updateRecs('reservations', f.impact.map(r => ({id:r.id, f:{statut:'Annulée'}})));
+  const byMail = {}; f.impact.forEach(r => (byMail[r.email.toLowerCase()] ||= {r, slots:[]}).slots.push(`${r.debut} à ${r.fin}`));
+  let sent = 0; const failed = [];
+  for(const [email, g] of Object.entries(byMail)){
+    const m = await mailUser(g.r.email, `Fermeture exceptionnelle – ${fmtShort(f.date)}`, `Bonjour ${g.r.prenom} ${g.r.nom},\n\n${message}\n\nRéservation annulée : ${fmtDate(f.date)}, ${g.slots.join(' ; ')}.\n\nL'équipe Résa.SREF`);
+    m.ok ? sent++ : failed.push(g.r.email);
+  }
+  const n = Object.keys(byMail).length;
+  await mailAdmins(`Fermeture exceptionnelle – ${fmtShort(f.date)}`, `${S.admin.full} a déclaré une fermeture exceptionnelle le ${fmtDate(f.date)}. ${f.impact.length} réservations annulées, ${n} personnes prévenues.`);
+  await logAction('Fermeture exceptionnelle', `${fmtShort(f.date)} ${f.all ? 'toute la journée' : f.chosen.map(s => s.debut + '-' + s.fin).join(', ')} : ${f.impact.length} réservations annulées, ${sent} e-mails envoyés`);
+  S.ferm = null;
+  shell('fermeture', `<p class="msg ${failed.length ? 'err' : 'ok'}">Fermeture enregistrée : ${f.impact.length} ${plural(f.impact.length,'réservation annulée','réservations annulées')}, ${sent} sur ${n} ${plural(n,'e-mail envoyé','e-mails envoyés')}.</p>
+    ${failed.length ? `<p>E-mails non envoyés (à prévenir autrement) : ${failed.map(esc).join(', ')}</p>` : ''}<div class="actions">${btn('tab','Retour au planning','',`data-tab="planning"`)}</div>`);
+  announce(`Fermeture enregistrée. ${sent} e-mails envoyés sur ${n}.`);
+};
+
+/* ----- Administrateurs ----- */
+async function tabAdmins(){
+  const admins = await loadAdmins(); S.admins = admins;
+  return `<ul class="liste">${admins.map(a => `<li>${esc(a.full)}, ${esc(a.email)} ${admins.length > 1 ? btn('adm-del','Supprimer','sec',`data-id="${a.id}" aria-label="Supprimer l'administrateur ${esc(a.full)}"`) : ''}</li>`).join('')}</ul>
+    <h3>Ajouter un administrateur</h3><p>Il recevra les e-mails de notification et aura les mêmes droits que vous.</p>${adminForm('adm-add','Ajouter l\'administrateur')}`;
+}
+A['adm-add'] = async fd => {
+  const admins = await loadAdmins(); const r = await newAdminRecord(fd, admins);
+  if(r.err) return adminTab('admins', {t:'err', m:r.err});
+  await logAction('Ajout d\'un administrateur', r.admin.full);
+  adminTab('admins', {m:`${r.admin.full} est maintenant administrateur.`});
+};
+A['adm-del'] = async d => {
+  const a = S.admins.find(x => x.id === d.id); if(!a || S.admins.length < 2) return;
+  if(!confirm(`Supprimer l'administrateur ${a.full} ?`)) return;
+  loading(); await deleteRecs('administrateurs', [a.id]); await logAction('Suppression d\'un administrateur', a.full);
+  if(a.id === S.admin.id){ S.admin = null; return home(); }
+  adminTab('admins', {m:`${a.full} a été supprimé.`});
+};
+
+/* ----- Journal ----- */
+async function tabJournal(){
+  const recs = (await listAll('journal')).sort((a,b) => b.createdTime.localeCompare(a.createdTime)).slice(0, 100);
+  if(!recs.length) return '<p>Aucune action enregistrée.</p>';
+  return `<ul class="liste journal">${recs.map(r => `<li><strong>${esc(gf(r,'journal','admin'))}</strong> : ${esc(gf(r,'journal','action'))}
+    <small>${esc(new Date(r.createdTime).toLocaleString('fr-FR',{dateStyle:'long',timeStyle:'short'}))}${gf(r,'journal','details') ? ' · ' + esc(gf(r,'journal','details')) : ''}</small></li>`).join('')}</ul>`;
+}
+
+/* ----- Export Excel ----- */
+function tabExport(){
+  return `<form data-form="exp" novalidate><div class="champ"><label for="e-p">Période</label><select id="e-p" name="p"><option value="semaine">La semaine</option><option value="mois" selected>Le mois</option><option value="annee">L'année</option></select></div>
+    <div class="champ"><label for="e-d">Contenant la date du</label><input id="e-d" name="d" type="date" value="${todayISO()}" required></div>
+    <div class="actions"><button class="btn" type="submit">Télécharger le fichier Excel</button></div></form>`;
+}
+function rangeOf(p, iso){
+  const [y,m,d] = iso.split('-').map(Number), ref = new Date(y,m-1,d);
+  if(p === 'semaine'){ const lun = new Date(ref); lun.setDate(ref.getDate() - ((ref.getDay()+6)%7)); const dim = new Date(lun); dim.setDate(lun.getDate()+6); return [isoOf(lun), isoOf(dim)]; }
+  if(p === 'mois') return [isoOf(new Date(y,m-1,1)), isoOf(new Date(y,m,0))];
+  return [`${y}-01-01`, `${y}-12-31`];
+}
+A.exp = async fd => {
+  const p = fd.get('p'), d = fd.get('d'); if(!d) return adminTab('export', {t:'err', m:'Choisissez une date.'});
+  loading('Préparation du fichier…');
+  const [a, b] = rangeOf(p, d);
+  const rows = (await listAll('reservations')).map(parseResa).filter(r => r.date >= a && r.date <= b).sort(cmpSlot);
+  if(!rows.length) return adminTab('export', {t:'info', m:`Aucune réservation du ${fmtShort(a)} au ${fmtShort(b)}.`});
+  if(typeof XLSX === 'undefined') return adminTab('export', {t:'err', m:'La bibliothèque Excel n\'a pas pu être chargée. Vérifiez la connexion internet.'});
+  const data = rows.map(r => ({'Date':fmtShort(r.date), 'Début':r.debut, 'Fin':r.fin, 'Nom':r.nom, 'Prénom':r.prenom, 'E-mail':r.email, 'Statut':r.statutRaw}));
+  const ws = XLSX.utils.json_to_sheet(data); ws['!cols'] = [12,8,8,20,20,32,12].map(wch => ({wch}));
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Réservations');
+  XLSX.writeFile(wb, `resa-sref-${p}-${a}.xlsx`);
+  await logAction('Export Excel', `${fmtShort(a)} au ${fmtShort(b)}, ${rows.length} lignes`);
+  adminTab('export', {m:`Fichier téléchargé : ${rows.length} ${plural(rows.length,'réservation','réservations')} du ${fmtShort(a)} au ${fmtShort(b)}.`});
+};
+
+/* ----- Diagnostic ----- */
+function tabDiag(){
+  return `<p>Vérifie que chaque table et chaque colonne attendues ont été trouvées dans Airtable.</p><table><caption>Tables Airtable</caption><thead><tr><th scope="col">Table</th><th scope="col">Trouvée sous le nom</th><th scope="col">Colonnes manquantes</th></tr></thead><tbody>
+    ${Object.entries(SCHEMA).map(([k,s]) => `<tr><td>${esc(s.label)}</td><td>${s.missingTable ? 'Introuvable' : esc(s.realName)}</td><td>${s.absent.length ? esc(s.absent.join(', ')) : 'Aucune'}</td></tr>`).join('')}</tbody></table>
+    <h3>E-mail de test</h3><p>Envoie un message à votre adresse (${esc(S.admin.email)}) pour vérifier EmailJS.</p><div class="actions">${btn('diag-mail','Envoyer un e-mail de test')}</div>`;
+}
+A['diag-mail'] = async () => {
+  loading(); const r = await mailUser(S.admin.email, 'Test Résa.SREF', 'Ce message confirme que l\'envoi d\'e-mails fonctionne.');
+  adminTab('diag', r.ok ? {m:'E-mail de test envoyé. Vérifiez votre boîte de réception.'} : {t:'err', m:`Échec de l'envoi : ${r.err}`});
+};
+
+/* ====================== DÉMARRAGE ====================== */
+(async () => {
+  try{
+    if(typeof emailjs !== 'undefined') emailjs.init({publicKey: CONFIG.EMAILJS_PUBLIC_KEY});
+    loading('Chargement…');
+    await loadSchema();
+    const missing = Object.entries(SCHEMA).filter(([k,v]) => v.absent.length);
+    if(missing.length){
+      show(card(`<h2>Configuration Airtable incomplète</h2>${msg('err','Certaines tables ou colonnes sont introuvables.')}<ul>${missing.map(([k,v]) => `<li>${esc(v.label)} : ${v.missingTable ? 'table introuvable' : 'colonnes manquantes : ' + esc(v.absent.join(', '))}</li>`).join('')}</ul>`));
+      return;
+    }
+    const tok = new URLSearchParams(location.search).get('annuler');
+    tok ? await cancelByLink(tok) : home();
+  }catch(e){
+    const s = e.status;
+    show(card(`<h2>Connexion à la base impossible</h2>${msg('err', s === 403 ? 'Le jeton Airtable doit aussi avoir la permission « schema.bases:read » (lecture de la structure). Ouvrez le jeton dans Airtable et ajoutez cette permission.'
+      : s === 401 ? 'Le jeton Airtable est invalide ou a été supprimé.' : s === 404 ? 'Base Airtable introuvable : vérifiez son identifiant.' : 'Erreur : ' + e.message)}`));
+  }
+})();
+</script>
+</body>
+</html>
