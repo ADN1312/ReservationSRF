@@ -44,7 +44,7 @@ fieldset{border:0;margin:0;padding:0}legend{font-weight:700;color:var(--bleu);ma
 .slot:has(input:checked){background:#e4edf7;border-color:var(--bleu)}
 label{font-weight:600}
 .champ{margin-bottom:1.1rem}.champ label{display:block;margin-bottom:.3rem}
-input[type=text],input[type=email],input[type=password],input[type=date],input[type=time],input[type=number],select,textarea{width:100%;padding:.65rem .8rem;border:2px solid var(--bord);border-radius:8px;background:#fff;min-height:44px}
+input[type=text],input[type=email],input[type=password],input[type=date],input[type=number],select,textarea{width:100%;padding:.65rem .8rem;border:2px solid var(--bord);border-radius:8px;background:#fff;min-height:44px}
 .rappel{display:flex;gap:.6rem;align-items:center;margin-top:.5rem}.rappel label{font-weight:400}.rappel input{width:20px;height:20px}
 .msg{padding:.8rem 1rem;border-radius:9px;margin:0 0 1rem;font-weight:600}
 .msg.err{background:#fde8e8;color:var(--err);border:1px solid #f1a9a9}
@@ -67,6 +67,25 @@ footer{text-align:center;padding:1.5rem 1rem;color:var(--gris)}
 .journal small{display:block;color:var(--gris)}
 @media (max-width:520px){dl{grid-template-columns:1fr}.card{padding:1.1rem}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.aide{margin:.25rem 0 0;font-size:.95em}
+[aria-invalid=true]{border-color:var(--err)!important}
+/* Jean-Jacques */
+.jj{margin-top:2rem;padding-top:.8rem;border-top:1px dashed var(--bord);text-align:center;font-size:.85rem;color:var(--gris)}
+.jj .lien{font-size:.85rem;color:var(--gris);font-style:italic}
+.jj-plaque{max-width:30rem;margin:.6rem auto 0;padding:.8rem 1rem;border:3px double #8a7a5a;border-radius:6px;background:#f3eee2;color:#4a3f2a;font-family:Georgia,serif}
+.jj-plaque p{margin:.3rem 0}.jj-indice{font-style:italic;font-size:.9em}
+.jj-scene{position:fixed;inset:0;z-index:50;pointer-events:none;overflow:hidden;background:linear-gradient(rgba(8,14,30,.78),rgba(8,14,30,.78) 60%,rgba(20,55,95,.9));animation:jjFond 10s ease-in-out forwards}
+.jj-bateau{position:absolute;bottom:12%;left:0;width:min(70vw,460px);animation:jjVogue 10s linear forwards}
+.jj-houle{animation:jjHoule 1.6s ease-in-out infinite alternate;transform-origin:50% 80%}
+.jj-flamme{animation:jjFeu .35s ease-in-out infinite alternate;transform-origin:50% 100%}
+.jj-flamme:nth-child(2){animation-duration:.5s}.jj-flamme:nth-child(3){animation-duration:.42s}
+.jj-texte{position:absolute;top:22%;left:50%;transform:translateX(-50%);width:min(90vw,40rem);text-align:center;font:italic 1.6rem/1.4 Georgia,serif;color:#fff;text-shadow:0 2px 8px #000,0 0 2px #000;opacity:0;animation:jjTexte 10s ease forwards}
+@keyframes jjVogue{from{transform:translateX(-110%)}to{transform:translateX(110vw)}}
+@keyframes jjHoule{from{transform:rotate(-3deg) translateY(0)}to{transform:rotate(3deg) translateY(6px)}}
+@keyframes jjFeu{from{transform:scaleY(.85) skewX(-4deg)}to{transform:scaleY(1.15) skewX(4deg)}}
+@keyframes jjTexte{0%,12%{opacity:0}22%,85%{opacity:1}100%{opacity:0}}
+@keyframes jjFond{0%{opacity:0}8%,90%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.jj-bateau{left:50%;transform:translateX(-50%)}.jj-texte,.jj-scene{opacity:1}}
 </style>
 </head>
 <body>
@@ -113,6 +132,14 @@ function show(html){ app.innerHTML = html; const h = app.querySelector('h2'); if
 const card = h => `<section class="card">${h}</section>`;
 const msg = (t, x) => x ? `<p class="msg ${t}">${esc(x)}</p>` : '';
 const loading = (t='Un instant…') => { app.innerHTML = card(`<p>${esc(t)}</p>`); announce(t); };
+/* Erreur dans un formulaire : message en haut, saisie conservée, curseur placé sur le champ fautif. */
+function fieldError(form, id, m){
+  form.querySelectorAll('[aria-invalid]').forEach(x => x.removeAttribute('aria-invalid'));
+  let p = form.querySelector('.msg.err'); if(!p){ p = document.createElement('p'); p.className = 'msg err'; form.prepend(p); }
+  p.textContent = m; const el = document.getElementById(id);
+  if(el){ el.setAttribute('aria-invalid', 'true'); el.focus(); }
+  announce(m);
+}
 const btn = (act, label, cls='', extra='') => `<button type="button" class="btn ${cls}" data-act="${act}" ${extra}>${label}</button>`;
 
 /* ====================== AIRTABLE ====================== */
@@ -271,8 +298,10 @@ document.addEventListener('change', e => {
   if(e.target.id === 'f-all') document.querySelectorAll('input[name=slot]:not(:disabled)').forEach(c => c.checked = e.target.checked);
   else if(e.target.name === 'slot' && !e.target.checked){ const a = document.getElementById('f-all'); if(a) a.checked = false; }
 });
+let busy = false;   // empêche un double clic d'enregistrer deux fois la même chose
 async function run(fn){
-  try{ await fn(); }catch(err){ showError(err); }
+  if(busy) return; busy = true;
+  try{ await fn(); }catch(err){ showError(err); }finally{ busy = false; }
 }
 function showError(err){
   const s = err.status;
@@ -356,7 +385,7 @@ A['r-confirm'] = async () => {
   const plan = S.plan = await loadPlanning(), w = S.who, bad = [], good = [];
   for(const id of S.sel){
     const s = plan.slots.find(x => x.id === id);
-    if(!s || s.full || s.closed) bad.push(s ? `${s.debut} à ${s.fin}` : 'un créneau supprimé');
+    if(!s || s.full || s.closed || !upcoming([s]).length) bad.push(s ? `${s.debut} à ${s.fin}` : 'un créneau supprimé');
     else if(plan.resas.some(r => r.email.toLowerCase() === w.email.toLowerCase() && r.date === s.date && r.debut === s.debut && r.fin === s.fin)) bad.push(`${s.debut} à ${s.fin} (vous l'avez déjà réservé)`);
     else good.push(s);
   }
@@ -393,8 +422,8 @@ A['a-email'] = async fd => {
   const email = fd.get('email').trim(); S.who.email = email; store.set('resa-sref-email', fd.get('rappel') ? email : '');
   if(!emailOk(email)) return renderCancelEmail('L\'adresse e-mail n\'est pas valide.');
   loading('Recherche de vos réservations…');
-  const t = todayISO();
-  S.cancelList = (await listAll('reservations')).map(parseResa).filter(r => r.ok && r.email.toLowerCase() === email.toLowerCase() && r.date >= t).sort(cmpSlot);
+  const t = todayISO(), h = nowHM();
+  S.cancelList = (await listAll('reservations')).map(parseResa).filter(r => r.ok && r.email.toLowerCase() === email.toLowerCase() && (r.date > t || (r.date === t && r.debut > h))).sort(cmpSlot);
   renderCancelList();
 };
 function renderCancelList(){
@@ -452,17 +481,18 @@ A.login = async fd => {
 };
 async function newAdminRecord(fd, admins){
   const o = {prenom: fd.get('prenom').trim(), nom: fd.get('nom').trim(), email: fd.get('email').trim(), pin: fd.get('pin').trim()};
-  if(!o.prenom || !o.nom) return {err:'Renseignez le prénom et le nom.'};
-  if(!emailOk(o.email)) return {err:'L\'adresse e-mail n\'est pas valide.'};
-  if(!/^\d{4}$/.test(o.pin)) return {err:'Le code PIN doit comporter exactement 4 chiffres.'};
-  for(const a of admins) if(await pinMatches(a.pin, o.pin)) return {err:'Ce code PIN est déjà utilisé par un autre administrateur. Choisissez-en un autre.'};
+  if(!o.prenom) return {err:'Renseignez le prénom.', field:'a-prenom'};
+  if(!o.nom) return {err:'Renseignez le nom.', field:'a-nom'};
+  if(!emailOk(o.email)) return {err:'L\'adresse e-mail n\'est pas valide.', field:'a-email'};
+  if(!/^\d{4}$/.test(o.pin)) return {err:'Le code PIN doit comporter exactement 4 chiffres.', field:'a-pin'};
+  for(const a of admins) if(await pinMatches(a.pin, o.pin)) return {err:'Ce code PIN est déjà utilisé par un autre administrateur. Choisissez-en un autre.', field:'a-pin'};
   const h = await hashPin(o.pin);
   const [rec] = await createRecs('administrateurs', [{nom:o.nom, prenom:o.prenom, email:o.email, pin:h, actif:true}]);
   return {admin: parseAdmin(rec), o};
 }
-A['first-admin'] = async fd => {
+A['first-admin'] = async (fd, form) => {
   const admins = await loadAdmins(); if(admins.length) return renderLogin(admins);
-  const r = await newAdminRecord(fd, admins); if(r.err) return renderLogin([], r.err);
+  const r = await newAdminRecord(fd, admins); if(r.err) return fieldError(form, r.field, r.err);
   S.admin = r.admin; await logAction('Création du premier administrateur', r.admin.full); adminTab('planning');
 };
 
@@ -472,7 +502,7 @@ function shell(tab, inner){
   const title = TABS.find(t => t[0] === tab)[1];
   show(`<section class="card"><p>Connecté : <strong>${esc(S.admin.full)}</strong></p>
     <nav aria-label="Sections de l'administration"><ul class="tabs">${TABS.map(([k,l]) => `<li><button class="tab" data-act="tab" data-tab="${k}" ${k === tab ? 'aria-current="page"' : ''}>${l}</button></li>`).join('')}
-    <li><button class="tab" data-act="logout">Se déconnecter</button></li></ul></nav><h2>${title}</h2>${inner}</section>`);
+    <li><button class="tab" data-act="logout">Se déconnecter</button></li></ul></nav><h2>${title}</h2>${inner}${JJ.plaque()}</section>`);
 }
 A.tab = d => adminTab(d.tab);
 A.logout = () => { S.admin = null; home(); };
@@ -508,27 +538,32 @@ A['adm-cancel'] = async d => {
 };
 
 /* ----- Créneaux ----- */
+const heures = (a, b) => { let h = ''; for(let i = a; i <= b; i++){ const v = pad(i) + ':00'; h += `<option value="${v}">${i} h</option>`; } return h; };
 async function tabCreneaux(){
   const plan = await loadPlanning(); S.plan = plan; const t = todayISO();
   const days = [...new Set(plan.slots.filter(s => s.date >= t).map(s => s.date))];
   return `<form data-form="cr-add" novalidate><h3>Ouvrir des créneaux d'une heure</h3>
-    <div class="champ"><label for="cr-date">Date</label><input id="cr-date" name="date" type="date" min="${t}" required></div>
-    <div class="champ"><label for="cr-o">Heure d'ouverture</label><input id="cr-o" name="o" type="time" required></div>
-    <div class="champ"><label for="cr-f">Heure de fermeture</label><input id="cr-f" name="f" type="time" required></div>
+    <div class="champ"><label for="cr-date">Date</label><input id="cr-date" name="date" type="date" min="${t}" required aria-describedby="cr-date-aide"><p id="cr-date-aide" class="aide">Tapez le jour, le mois puis l'année, en chiffres.</p></div>
+    <div class="champ"><label for="cr-o">Heure d'ouverture</label><select id="cr-o" name="o" required><option value="">Choisir</option>${heures(5,22)}</select></div>
+    <div class="champ"><label for="cr-f">Heure de fermeture</label><select id="cr-f" name="f" required><option value="">Choisir</option>${heures(6,23)}</select></div>
     <div class="champ"><label for="cr-n">Nombre de places par créneau</label><input id="cr-n" name="n" type="number" min="1" max="200" required></div>
     <div class="actions"><button class="btn" type="submit">Créer les créneaux</button></div></form>
     <h3>Jours ouverts à la réservation</h3>${days.length ? `<ul class="liste">${days.map(d => {
       const n = plan.slots.filter(s => s.date === d).length;
       return `<li>${esc(fmtDate(d))} : ${n} ${plural(n,'créneau','créneaux')} ${btn('cr-del','Supprimer ce jour','sec',`data-date="${d}" aria-label="Supprimer les créneaux du ${esc(fmtDate(d))}"`)}</li>`; }).join('')}</ul>` : '<p>Aucun jour ouvert.</p>'}`;
 }
-A['cr-add'] = async fd => {
+A['cr-add'] = async (fd, form) => {
   const date = fd.get('date'), o = fd.get('o'), f = fd.get('f'), n = parseInt(fd.get('n'), 10);
   const bad = m => adminTab('creneaux', {t:'err', m});
-  if(!date || !o || !f || !(n > 0)) return bad('Renseignez la date, les heures et le nombre de places.');
+  if(!date) return fieldError(form, 'cr-date', 'La date est vide ou incomplète. Tapez le jour, le mois puis l\'année.');
+  if(date < todayISO()) return fieldError(form, 'cr-date', 'Cette date est déjà passée.');
+  if(!o) return fieldError(form, 'cr-o', 'Choisissez l\'heure d\'ouverture.');
+  if(!f) return fieldError(form, 'cr-f', 'Choisissez l\'heure de fermeture.');
+  if(!(n > 0)) return fieldError(form, 'cr-n', 'Indiquez le nombre de places par créneau (au moins 1).');
+  if(f <= o) return fieldError(form, 'cr-f', 'L\'heure de fermeture doit être après l\'heure d\'ouverture.');
   const toMin = t => { const [h,m] = t.split(':').map(Number); return h*60+m; };
   const fromMin = x => `${pad(Math.floor(x/60))}:${pad(x%60)}`;
   const rows = []; for(let x = toMin(o); x + 60 <= toMin(f); x += 60) rows.push({date, debut: fromMin(x), fin: fromMin(x+60), capacite: n, actif: true});
-  if(!rows.length) return bad('L\'heure de fermeture doit être au moins une heure après l\'ouverture.');
   loading();
   const existing = (await listAll('creneaux')).map(parseSlot).filter(s => s.date === date);
   const nouveaux = rows.filter(r => !existing.some(e => e.debut === r.debut));
@@ -555,7 +590,9 @@ async function tabFermeture(){
     <div class="actions"><button class="btn" type="submit">Afficher les créneaux de ce jour</button></div></form>`;
 }
 A['f-date'] = async fd => {
-  const date = fd.get('date'); if(!date) return adminTab('fermeture', {t:'err', m:'Choisissez une date.'});
+  const date = fd.get('date');
+  if(!date) return adminTab('fermeture', {t:'err', m:'La date est vide ou incomplète. Tapez le jour, le mois puis l\'année.'});
+  if(date < todayISO()) return adminTab('fermeture', {t:'err', m:'Cette date est déjà passée.'});
   loading(); const plan = S.plan = await loadPlanning();
   S.ferm = {date, slots: plan.slots.filter(s => s.date === date)}; renderFermSlots();
 };
@@ -616,9 +653,9 @@ async function tabAdmins(){
   return `<ul class="liste">${admins.map(a => `<li>${esc(a.full)}, ${esc(a.email)} ${admins.length > 1 ? btn('adm-del','Supprimer','sec',`data-id="${a.id}" aria-label="Supprimer l'administrateur ${esc(a.full)}"`) : ''}</li>`).join('')}</ul>
     <h3>Ajouter un administrateur</h3><p>Il recevra les e-mails de notification et aura les mêmes droits que vous.</p>${adminForm('adm-add','Ajouter l\'administrateur')}`;
 }
-A['adm-add'] = async fd => {
+A['adm-add'] = async (fd, form) => {
   const admins = await loadAdmins(); const r = await newAdminRecord(fd, admins);
-  if(r.err) return adminTab('admins', {t:'err', m:r.err});
+  if(r.err) return fieldError(form, r.field, r.err);
   await logAction('Ajout d\'un administrateur', r.admin.full);
   adminTab('admins', {m:`${r.admin.full} est maintenant administrateur.`});
 };
@@ -676,6 +713,82 @@ A['diag-mail'] = async () => {
   adminTab('diag', r.ok ? {m:'E-mail de test envoyé. Vérifiez votre boîte de réception.'} : {t:'err', m:`Échec de l'envoi : ${r.err}`});
 };
 
+/* ====================== JEAN-JACQUES ======================
+   Œuf de Pâques réservé à l'espace administrateur.
+   La plaque dévoile un indice ; le mot « jeanjacques » tapé hors d'un champ lance la cérémonie. */
+const JJ = {
+  PHRASE: 'Jean-Jacques ne courait pas après la gloire : il l\'attendait sur sa branche. Elle est venue en drakkar.',
+  PLAQUE: 'Ici reposait Jean-Jacques, phasme. Il ne faisait rien, mais il le faisait avec une distinction qui force le respect.',
+  INDICE: 'Paraît qu\'il répond encore quand on l\'appelle par son nom. Encore faut-il savoir taper.',
+  tape: '', enCours: false,
+  plaque(){
+    return `<div class="jj"><button type="button" class="lien" data-act="jj" aria-expanded="false" aria-controls="jj-plaque">En mémoire de Jean-Jacques</button>
+      <div id="jj-plaque" class="jj-plaque" hidden><p>${esc(this.PLAQUE)}</p><p class="jj-indice">${esc(this.INDICE)}</p></div></div>`;
+  },
+  scene(){
+    const flammes = [[100,58,40],[125,40,58],[150,50,48],[178,34,64],[205,48,50],[232,56,42],[255,64,34]].map(([x,y,h]) =>
+      `<path class="jj-flamme" d="M${x-9} ${y+h} Q${x-11} ${y+h/2} ${x} ${y} Q${x+11} ${y+h/2} ${x+9} ${y+h} Z" fill="#ff7a12" stroke="#ffd23f" stroke-width="3"/>`).join('');
+    return `<div class="jj-scene"><svg class="jj-bateau" viewBox="0 0 340 170" aria-hidden="true"><g class="jj-houle">
+      <rect x="166" y="14" width="5" height="90" fill="#5a3a1c"/>
+      <path d="M171 18 L232 30 L232 88 L171 96 Z" fill="#c8102e"/><path d="M171 40 L232 46 M171 62 L232 64 M171 84 L232 82" stroke="#f3e9d2" stroke-width="7"/>
+      ${flammes}
+      <g stroke="#8fbf3a" stroke-width="4" stroke-linecap="round" fill="none"><path d="M110 92 L200 92"/><path d="M200 92 L214 80"/><path d="M122 92 L112 80 M140 92 L136 78 M160 92 L166 78 M180 92 L188 80 M128 92 L120 99 M172 92 L180 99"/><path d="M214 80 L232 68 M214 80 L236 76"/></g>
+      <path d="M20 96 Q40 92 60 100 L280 100 Q300 92 322 96 Q300 140 250 146 L90 146 Q40 140 20 96 Z" fill="#7a4a22" stroke="#4a2c12" stroke-width="3"/>
+      <path d="M20 96 Q8 80 14 62 Q24 70 30 90 Z M322 96 Q334 80 328 62 Q318 70 312 90 Z" fill="#7a4a22" stroke="#4a2c12" stroke-width="3"/>
+      ${[70,110,150,190,230,270].map(x => `<circle cx="${x}" cy="114" r="10" fill="#d9b44a" stroke="#4a2c12" stroke-width="2"/>`).join('')}
+      <path d="M0 150 Q42 138 85 150 T170 150 T255 150 T340 150 L340 170 L0 170 Z" fill="#2c5f8a" opacity=".9"/></g></svg>
+      <p class="jj-texte">${esc(this.PHRASE)}</p></div>`;
+  },
+  son(){
+    const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return;
+    const ac = new AC(), t0 = ac.currentTime, D = 10;
+    const sortie = ac.createGain(); sortie.gain.setValueAtTime(0, t0); sortie.gain.linearRampToValueAtTime(.6, t0 + .8);
+    sortie.gain.setValueAtTime(.6, t0 + D - 1.5); sortie.gain.linearRampToValueAtTime(0, t0 + D); sortie.connect(ac.destination);
+    const bruit = ac.createBuffer(1, ac.sampleRate * D, ac.sampleRate), b = bruit.getChannelData(0);
+    for(let i = 0; i < b.length; i++) b[i] = Math.random() * 2 - 1;
+    // Vagues : bruit grave dont le volume monte et descend lentement
+    const vague = ac.createBufferSource(); vague.buffer = bruit;
+    const filtreV = ac.createBiquadFilter(); filtreV.type = 'lowpass'; filtreV.frequency.value = 500;
+    const gV = ac.createGain(); gV.gain.value = .25; const lfo = ac.createOscillator(); lfo.frequency.value = .18;
+    const gL = ac.createGain(); gL.gain.value = .2; lfo.connect(gL).connect(gV.gain);
+    vague.connect(filtreV).connect(gV).connect(sortie); vague.start(t0); lfo.start(t0); vague.stop(t0 + D); lfo.stop(t0 + D);
+    // Feu : petits craquements aigus au hasard
+    const feu = ac.createBufferSource(); feu.buffer = bruit; const filtreF = ac.createBiquadFilter(); filtreF.type = 'highpass'; filtreF.frequency.value = 2500;
+    const gF = ac.createGain(); gF.gain.setValueAtTime(0, t0);
+    for(let t = .5; t < D - .5; t += .05 + Math.random() * .25){ gF.gain.setValueAtTime(.35 * Math.random(), t0 + t); gF.gain.setValueAtTime(0, t0 + t + .015); }
+    feu.connect(filtreF).connect(gF).connect(sortie); feu.start(t0); feu.stop(t0 + D);
+    // Cor viking : deux longues notes graves, en quinte
+    [[1, 2.2], [3.8, 3.2]].forEach(([debut, duree]) => {
+      const gC = ac.createGain(), filtreC = ac.createBiquadFilter(); filtreC.type = 'lowpass'; filtreC.frequency.value = 900;
+      gC.gain.setValueAtTime(0, t0 + debut); gC.gain.linearRampToValueAtTime(.22, t0 + debut + .35);
+      gC.gain.setValueAtTime(.22, t0 + debut + duree - .5); gC.gain.linearRampToValueAtTime(0, t0 + debut + duree);
+      filtreC.connect(gC).connect(sortie);
+      [98, 147].forEach(f => { const o = ac.createOscillator(); o.type = 'sawtooth';
+        o.frequency.setValueAtTime(f * .94, t0 + debut); o.frequency.linearRampToValueAtTime(f, t0 + debut + .3);
+        o.connect(filtreC); o.start(t0 + debut); o.stop(t0 + debut + duree); });
+    });
+    setTimeout(() => ac.close(), (D + .5) * 1000);
+  },
+  ceremonie(){
+    if(this.enCours) return; this.enCours = true;
+    document.body.insertAdjacentHTML('beforeend', this.scene());
+    try{ this.son(); }catch{}
+    setTimeout(() => announce(this.PHRASE), 1200);
+    setTimeout(() => { document.querySelector('.jj-scene')?.remove(); this.enCours = false; }, 10200);
+  }
+};
+A.jj = (d, el) => {
+  const p = document.getElementById('jj-plaque'), ouvert = p.hidden;
+  p.hidden = !ouvert; el.setAttribute('aria-expanded', String(ouvert));
+  if(ouvert) announce(`${JJ.PLAQUE} ${JJ.INDICE}`);
+};
+document.addEventListener('keydown', e => {
+  if(!S.admin || e.ctrlKey || e.altKey || e.metaKey || e.target.closest('input, textarea, select, [contenteditable]')) return;
+  if(e.key.length !== 1) return;
+  JJ.tape = (JJ.tape + e.key.toLowerCase()).replace(/[^a-z]/g, '').slice(-11);
+  if(JJ.tape === 'jeanjacques'){ JJ.tape = ''; JJ.ceremonie(); }
+});
+
 /* ====================== DÉMARRAGE ====================== */
 (async () => {
   try{
@@ -688,11 +801,13 @@ A['diag-mail'] = async () => {
       return;
     }
     const tok = new URLSearchParams(location.search).get('annuler');
+    if(tok) history.replaceState(null, '', location.pathname);
     tok ? await cancelByLink(tok) : home();
   }catch(e){
     const s = e.status;
     show(card(`<h2>Connexion à la base impossible</h2>${msg('err', s === 403 ? 'Le jeton Airtable doit aussi avoir la permission « schema.bases:read » (lecture de la structure). Ouvrez le jeton dans Airtable et ajoutez cette permission.'
-      : s === 401 ? 'Le jeton Airtable est invalide ou a été supprimé.' : s === 404 ? 'Base Airtable introuvable : vérifiez son identifiant.' : 'Erreur : ' + e.message)}`));
+      : s === 401 ? 'Le jeton Airtable est invalide ou a été supprimé.' : s === 404 ? 'Base Airtable introuvable : vérifiez son identifiant.' : 'Erreur : ' + e.message)}
+      <div class="actions"><button type="button" class="btn" onclick="location.reload()">Réessayer</button></div>`));
   }
 })();
 </script>
