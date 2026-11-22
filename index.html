@@ -110,6 +110,7 @@ body.admin main{max-width:1040px}
 .adm-contenu form .champ{max-width:34rem}.adm-contenu form .rg-mail .champ{max-width:none}
 .adm-contenu table th{background:#eef2f7}
 /* Jean-Jacques */
+.accomp{border:2px solid var(--bord);border-radius:10px;padding:.8rem 1rem;margin:0 0 1rem}.accomp legend{font-weight:700;padding:0 .3rem}
 .rg-mail{border:1px solid var(--bord);border-radius:10px;padding:1rem;margin:0 0 1rem}
 textarea{width:100%;padding:.65rem .8rem;border:2px solid var(--bord);border-radius:8px;background:#fff}
 .jj{position:fixed;left:.5rem;bottom:.4rem;z-index:5;max-width:min(22rem,calc(100vw - 1rem))}
@@ -339,6 +340,7 @@ async function loadPlanning(){
   }).sort(cmpSlot);
   return {slots, resas, ferms};
 }
+const dejaPris = (s, email) => !!email && (S.plan?.resas || []).some(r => r.email.toLowerCase() === email.toLowerCase() && r.date === s.date && r.debut === s.debut && r.fin === s.fin);
 const upcoming = slots => { const t = todayISO(), n = nowHM(); return slots.filter(s => s.date > t || (s.date === t && s.debut > n)); };
 const loadAdmins = async () => (await listAll('administrateurs')).map(parseAdmin).filter(a => a.actif);
 
@@ -360,9 +362,9 @@ async function mail(template, params){
 /* ----- Modèles d'e-mails : textes d'origine, modifiables dans l'onglet « Réglages des e-mails » ----- */
 const EXPEDITEUR = 'Salle de remise en forme - UNADEV Toulouse';
 const MAILS = {
-  confirmation: {titre:'Confirmation de réservation', pour:'la personne qui réserve', reperes:['prénom','nom','date','heure',"lien d'annulation"],
+  confirmation: {titre:'Confirmation de réservation', pour:'la personne qui réserve', reperes:['prénom','nom','date','heure','accompagnant',"lien d'annulation"],
     sujet:'Confirmation de votre réservation',
-    corps:"Bonjour [prénom] [nom],\n\nVotre réservation est confirmée pour le [date], de [heure].\n\nPour annuler, ouvrez ce lien : [lien d'annulation]\n\nÀ bientôt,\nL'équipe Résa.SREF"},
+    corps:"Bonjour [prénom] [nom],\n\nVotre réservation est confirmée pour le [date], de [heure][accompagnant].\n\nPour annuler, ouvrez ce lien : [lien d'annulation]\n\nÀ bientôt,\nL'équipe Résa.SREF"},
   annulation: {titre:'Annulation par la personne', pour:'la personne qui annule', reperes:['prénom','nom','date','heure'],
     sujet:'Annulation de votre réservation',
     corps:"Bonjour [prénom] [nom],\n\nVotre réservation du [date], de [heure], a bien été annulée.\n\nL'équipe Résa.SREF"},
@@ -372,9 +374,9 @@ const MAILS = {
   fermeture: {titre:'Fermeture exceptionnelle', pour:'les personnes concernées (le texte reste modifiable à chaque fermeture)', reperes:['prénom','nom','date','horaires','heure'],
     sujet:'Fermeture exceptionnelle le [date]',
     corps:"Bonjour [prénom] [nom],\n\nLa salle sera exceptionnellement fermée le [date], [horaires]. Votre réservation de [heure] est donc annulée.\n\nNous vous prions de nous excuser pour la gêne occasionnée.\n\nL'équipe Résa.SREF"},
-  adminResa: {titre:'Avis aux administrateurs : nouvelle réservation', pour:'les administrateurs qui ont coché cette notification', reperes:['prénom','nom','e-mail','date','heure'],
+  adminResa: {titre:'Avis aux administrateurs : nouvelle réservation', pour:'les administrateurs qui ont coché cette notification', reperes:['prénom','nom','e-mail','date','heure','accompagnant'],
     sujet:'Nouvelle réservation le [date]',
-    corps:"[prénom] [nom] ([e-mail]) a réservé le [date], de [heure]."},
+    corps:"[prénom] [nom] ([e-mail]) a réservé le [date], de [heure][accompagnant]."},
   adminAnnul: {titre:'Avis aux administrateurs : annulation', pour:'les administrateurs qui ont coché cette notification', reperes:['prénom','nom','e-mail','date','heure','annulé par'],
     sujet:'Annulation le [date]',
     corps:"La réservation de [prénom] [nom] ([e-mail]) du [date], de [heure], a été annulée par [annulé par]. Une place est libre."},
@@ -406,13 +408,14 @@ const notifOn = (adminId, type) => param(`notif.${type}.${adminId}`, 'oui') !== 
 
 const send = (to, sujet, message) => mail(CONFIG.TEMPLATE_NOTIFICATION, {to_email:to, sujet, message, from_name: param('expediteur', EXPEDITEUR)});
 /* Envoie le modèle « k » à une personne, en remplaçant les repères. */
-const mailUser = (to, k, vars, corps) => { const t = tpl(k); return send(to, fill(t.sujet, vars), fill(corps ?? t.corps, vars)); };
+const avecAccomp = (texte, vars) => vars.accompagnant && !/\[accompagnant\]/i.test(texte) ? texte + `\n\nPersonne qui vous accompagne : ${vars.accompagnant.replace(/^, avec /, '')}.` : texte;
+const mailUser = (to, k, vars, corps) => { const t = tpl(k); return send(to, fill(t.sujet, vars), fill(avecAccomp(corps ?? t.corps, vars), vars)); };
 /* Prévient les administrateurs. type : 'resa', 'annul', ou null (tous). sauf : l'administrateur à l'origine de l'action, inutile de le prévenir. */
 async function mailAdmins(k, vars, type, sauf){
   await loadParams().catch(() => {});
   const to = (await loadAdmins()).filter(a => a.id !== sauf && (!type || notifOn(a.id, type))).map(a => a.email).filter(Boolean);
   if(!to.length) return {ok:true};
-  const t = tpl(k), sujet = fill(t.sujet, vars), message = fill(t.corps, vars);
+  const t = tpl(k), sujet = fill(t.sujet, vars), message = fill(avecAccomp(t.corps, vars), vars);
   const r = await send(to.join(','), sujet, message);
   if(r.ok || to.length === 1 || ![400,422].includes(r.status)) return r;
   let ok = false; for(const x of to){ if((await send(x, sujet, message)).ok) ok = true; }
@@ -423,7 +426,7 @@ async function logAction(action, details){
 }
 
 /* ====================== ÉTAT ET NAVIGATION ====================== */
-const S = {plan:null, date:null, sel:[], who:{prenom:'', nom:'', email: store.get('resa-sref-email')}, cancelList:[], cancel:null, admin:null, ferm:null, params:{}, paramIds:{}};
+const S = {plan:null, date:null, sel:[], who:{prenom:'', nom:'', email: store.get('resa-sref-email')}, cancelList:[], cancel:null, admin:null, ferm:null, params:{}, paramIds:{}, guest:null, cancelGroup:null};
 const A = {};
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]'); if(!el) return;
@@ -469,7 +472,7 @@ function home(){ document.body.classList.remove('admin');
 A.home = home;
 
 /* ====================== RÉSERVER ====================== */
-A['r-start'] = async () => { loading('Chargement des dates disponibles…'); S.plan = await loadPlanning(); S.sel = []; renderDates(); };
+A['r-start'] = async () => { loading('Chargement des dates disponibles…'); S.plan = await loadPlanning(); S.sel = []; S.guest = null; renderDates(); };
 function renderDates(){
   const ups = upcoming(S.plan.slots), dates = [...new Set(ups.map(s => s.date))].sort();
   if(!dates.length) return show(card(`<h2>Aucune date disponible</h2><p>Aucun créneau n'est ouvert à la réservation pour le moment.</p><div class="actions">${btn('home','Retour','sec')}</div>`));
@@ -484,8 +487,8 @@ A['r-date'] = d => { S.date = d.date; S.sel = []; renderSlots(); };
 function renderSlots(err){
   const slots = upcoming(S.plan.slots).filter(s => s.date === S.date);
   const items = slots.map(s => {
-    const off = s.full || s.closed;
-    const etat = s.closed ? 'fermé, indisponible' : s.full ? 'complet, indisponible' : `${s.left} ${plural(s.left,'place restante','places restantes')}`;
+    const mien = dejaPris(s, S.who.email), off = s.full || s.closed || mien;
+    const etat = mien ? 'déjà réservé par vous' : s.closed ? 'fermé, indisponible' : s.full ? 'complet, indisponible' : `${s.left} ${plural(s.left,'place restante','places restantes')}`;
     return `<li><button class="choix-btn" ${off ? 'aria-disabled="true"' : `data-act="r-slot" data-id="${s.id}"`}><span>${plage(s)}</span><span class="sr-only"> : </span><span class="etat">${etat}</span></button></li>`;
   }).join('');
   show(card(`<h2>Étape 2 sur 4 : choisir l'heure</h2>${msg('err', err)}<p>${esc(cap1(fmtDate(S.date)))}</p>
@@ -502,52 +505,80 @@ function renderWho(err){
     <div class="champ"><label for="nom">Nom</label><input id="nom" name="nom" type="text" autocomplete="family-name" spellcheck="false" required value="${esc(w.nom)}"></div>
     <div class="champ"><label for="email">Adresse e-mail</label><input id="email" name="email" type="email" autocomplete="email" spellcheck="false" autocapitalize="off" required value="${esc(w.email)}">
       <div class="rappel"><input id="rappel" name="rappel" type="checkbox" ${store.get('resa-sref-email') ? 'checked' : ''}><label for="rappel">Se souvenir de moi sur cet appareil</label></div></div>
+    ${blocAccomp()}
     <div class="actions">${btn('r-back-slots','Retour','sec')}<button class="btn" type="submit">Continuer</button></div></form>`));
   if(err){ announce(err); SON.err(); }
 }
 A['r-back-slots'] = () => renderSlots();
+/* Accompagnant : 2 places au maximum par réservation (vous + 1 personne). */
+const placesLibres = () => Math.min(...chosen().map(s => s.left));
+function blocAccomp(){
+  const g = S.guest;
+  if(g) return `<fieldset class="accomp"><legend>Personne qui vous accompagne</legend>
+      <div class="champ"><label for="g-prenom">Son prénom</label><input id="g-prenom" name="g-prenom" type="text" spellcheck="false" required value="${esc(g.prenom)}"></div>
+      <div class="champ"><label for="g-nom">Son nom</label><input id="g-nom" name="g-nom" type="text" spellcheck="false" required value="${esc(g.nom)}"></div>
+      ${btn('r-guest-del','Retirer cette personne','sec petit')}</fieldset>`;
+  if(placesLibres() < 2) return `<p class="aide">Il ne reste qu'une place sur ce créneau : vous ne pouvez pas ajouter de personne.</p>`;
+  return `<div class="actions">${btn('r-guest-add','Ajouter une personne à votre réservation','sec')}</div>`;
+}
+const garderSaisie = () => { const f = document.querySelector('form[data-form="r-who"]'); if(!f) return;
+  const v = n => (f.elements[n]?.value || '').trim();
+  S.who = {prenom: v('prenom'), nom: v('nom'), email: v('email')}; if(S.guest) S.guest = {prenom: v('g-prenom'), nom: v('g-nom')}; };
+A['r-guest-add'] = () => { garderSaisie(); S.guest = {prenom:'', nom:''}; renderWho(); setTimeout(() => document.getElementById('g-prenom')?.focus(), 150); announce('Champs ajoutés pour la personne qui vous accompagne.'); };
+A['r-guest-del'] = () => { garderSaisie(); S.guest = null; renderWho(); announce('Personne retirée de la réservation.'); };
 A['r-who'] = fd => {
   const w = {prenom: fd.get('prenom').trim(), nom: fd.get('nom').trim(), email: fd.get('email').trim()};
   S.who = w; store.set('resa-sref-email', fd.get('rappel') ? w.email : '');
   if(!w.prenom || !w.nom) return renderWho('Renseignez votre prénom et votre nom.');
   if(!emailOk(w.email)) return renderWho('L\'adresse e-mail n\'est pas valide.');
+  if(S.guest){
+    S.guest = {prenom: (fd.get('g-prenom') || '').trim(), nom: (fd.get('g-nom') || '').trim()};
+    if(!S.guest.prenom || !S.guest.nom) return renderWho('Renseignez le prénom et le nom de la personne qui vous accompagne, ou retirez-la.');
+    if(placesLibres() < 2) return renderWho('Il ne reste qu\'une place sur ce créneau : retirez la personne qui vous accompagne.');
+  }
+  const doublon = chosen().find(s => dejaPris(s, w.email));
+  if(doublon) return renderSlots(`Vous avez déjà réservé le créneau de ${plage(doublon)} ce jour-là. Choisissez une autre heure.`);
   renderRecap();
 };
 const chosen = () => S.sel.map(id => S.plan.slots.find(s => s.id === id)).filter(Boolean).sort(cmpSlot);
 function renderRecap(){
   const w = S.who;
   show(card(`<h2>Étape 4 sur 4 : vérifier et confirmer</h2>
-    <dl><dt>Nom</dt><dd>${esc(w.prenom)} ${esc(w.nom)}</dd><dt>E-mail</dt><dd>${esc(w.email)}</dd><dt>Date</dt><dd>${esc(cap1(fmtDate(S.date)))}</dd>
-    <dt>Heure</dt><dd>${chosen().map(plage).join(', ')}</dd></dl>
+    <dl><dt>Nom</dt><dd>${esc(w.prenom)} ${esc(w.nom)}</dd>${S.guest ? `<dt>Accompagné de</dt><dd>${esc(S.guest.prenom)} ${esc(S.guest.nom)}</dd>` : ''}<dt>E-mail</dt><dd>${esc(w.email)}</dd><dt>Date</dt><dd>${esc(cap1(fmtDate(S.date)))}</dd>
+    <dt>Heure</dt><dd>${chosen().map(plage).join(', ')}</dd><dt>Places</dt><dd>${S.guest ? 2 : 1}</dd></dl>
     <p>Un e-mail de confirmation vous sera envoyé, avec un lien pour annuler.</p>
     <div class="actions">${btn('r-back-who','Modifier','sec')}${btn('r-confirm','Confirmer la réservation','gros')}</div>`));
 }
 A['r-back-who'] = () => renderWho();
 A['r-confirm'] = async () => {
-  loading('Enregistrement de votre réservation…');
+  loading('Enregistrement de votre réservation. Merci de patienter…');
   const plan = S.plan = await loadPlanning(), w = S.who, bad = [], good = [];
   for(const id of S.sel){
     const s = plan.slots.find(x => x.id === id);
     if(!s || s.full || s.closed || !upcoming([s]).length) bad.push(s ? plage(s) : 'un créneau supprimé');
+    else if(S.guest && s.left < 2){ S.guest = null; return renderWho('Il ne reste plus qu\'une place sur ce créneau : la personne qui vous accompagne a été retirée. Vérifiez, puis continuez.'); }
     else if(plan.resas.some(r => r.email.toLowerCase() === w.email.toLowerCase() && r.date === s.date && r.debut === s.debut && r.fin === s.fin)) bad.push(`${plage(s)} (vous l'avez déjà réservé)`);
     else good.push(s);
   }
   if(bad.length){ S.sel = good.map(s => s.id); return renderSlots(`Désolé, ce créneau n'est plus disponible : ${bad.join(' ; ')}. Choisissez une autre heure.`); }
   const rand = () => crypto.randomUUID().replace(/-/g,'').slice(0,16);
+  const g = S.guest, accomp = g ? `, avec ${g.prenom} ${g.nom}` : '';
   const rows = good.map(s => ({nom:w.nom, prenom:w.prenom, email:w.email, date:s.date, debut:s.debut, fin:s.fin, statut:'Confirmée', token:rand(), datereservation:new Date().toISOString()}));
-  await createRecs('reservations', rows);
+  // l'accompagnant est une réservation normale, à l'adresse de la personne qui réserve et avec le même lien d'annulation (le lien annule les deux places)
+  const all = g ? rows.flatMap(r => [r, {...r, nom:g.nom, prenom:g.prenom}]) : rows;
+  await createRecs('reservations', all);
   let fails = 0;
   for(const r of rows){
-    const m = await mailUser(w.email, 'confirmation', {prenom:w.prenom, nom:w.nom, date:fmtDate(r.date), heure:plage(r),
+    const m = await mailUser(w.email, 'confirmation', {prenom:w.prenom, nom:w.nom, date:fmtDate(r.date), heure:plage(r), accompagnant:accomp,
       "lien d'annulation": `${location.origin}${location.pathname}?annuler=${r.token}`});
     if(!m.ok) fails++;
   }
-  await mailAdmins('adminResa', {prenom:w.prenom, nom:w.nom, 'e-mail':w.email, date:fmtDate(rows[0].date), heure:rows.map(plage).join(', ')}, 'resa');
-  S.sel = [];
+  await mailAdmins('adminResa', {prenom:w.prenom, nom:w.nom, 'e-mail':w.email, date:fmtDate(rows[0].date), heure:rows.map(plage).join(', '), accompagnant:accomp}, 'resa');
+  S.sel = []; S.guest = null;
   SON.ok();
-  show(card(`<h2>Réservation confirmée</h2>${msg('ok', `Créneau réservé pour le ${fmtDate(rows[0].date)}, de ${plage(rows[0])}.`)}
+  show(card(`<h2>Réservation confirmée</h2>${msg('ok', `${g ? '2 places réservées' : 'Créneau réservé'} pour le ${fmtDate(rows[0].date)}, de ${plage(rows[0])}${accomp}.`)}
     ${fails ? msg('err', 'Votre réservation est bien enregistrée, mais l\'e-mail de confirmation n\'a pas pu être envoyé. Notez bien la date et l\'heure.') : `<p>Un e-mail de confirmation a été envoyé à ${esc(w.email)}.</p>`}
-    <div class="actions">${btn('r-start','Réserver un autre créneau')}${btn('home','Retour à l\'accueil','sec')}</div>`));
+    <div class="actions">${btn('r-start','Faire une autre réservation')}${btn('home','Retour à l\'accueil','sec')}</div>`));
 };
 
 /* ====================== ANNULER ====================== */
@@ -571,21 +602,22 @@ A['a-email'] = async fd => {
 function renderCancelList(){
   if(!S.cancelList.length) return show(card(`<h2>Aucune réservation à venir</h2><p>Aucune réservation à venir n'est enregistrée pour ${esc(S.who.email)}.</p><div class="actions">${btn('a-start','Essayer une autre adresse','sec')}${btn('home','Accueil','sec')}</div>`));
   show(card(`<h2>Choisissez la réservation à annuler</h2><ul class="liste">${S.cancelList.map(r =>
-    `<li><button class="choix-btn" data-act="a-pick" data-id="${r.id}"><span>${esc(cap1(fmtDate(r.date)))}, ${plage(r)}</span><span class="sr-only"> : </span><span class="etat">annuler</span></button></li>`).join('')}</ul>
+    `<li><button class="choix-btn" data-act="a-pick" data-id="${r.id}"><span>${esc(cap1(fmtDate(r.date)))}, ${plage(r)}, ${esc(r.prenom)} ${esc(r.nom)}</span><span class="sr-only"> : </span><span class="etat">annuler</span></button></li>`).join('')}</ul>
     <div class="actions">${btn('a-start','Retour','sec')}</div>`));
 }
-A['a-pick'] = d => { S.cancel = S.cancelList.find(r => r.id === d.id); renderCancelConfirm(); };
+A['a-pick'] = d => { S.cancel = S.cancelList.find(r => r.id === d.id); S.cancelGroup = [S.cancel]; renderCancelConfirm(); };
 function renderCancelConfirm(){
   const r = S.cancel;
-  show(card(`<h2>Confirmer l'annulation</h2><dl><dt>Date</dt><dd>${esc(fmtDate(r.date))}</dd><dt>Heure</dt><dd>${plage(r)}</dd><dt>Réservé par</dt><dd>${esc(r.prenom)} ${esc(r.nom)}</dd></dl>
-    <div class="actions">${btn('home','Non, garder ma réservation','sec')}${btn('a-confirm','Oui, annuler cette réservation','danger gros')}</div>`));
+  const grp = S.cancelGroup?.length ? S.cancelGroup : [r], deux = grp.length > 1;
+  show(card(`<h2>Confirmer l'annulation</h2><dl><dt>Date</dt><dd>${esc(fmtDate(r.date))}</dd><dt>Heure</dt><dd>${plage(r)}</dd><dt>${deux ? 'Places' : 'Place de'}</dt><dd>${grp.map(x => esc(x.prenom + ' ' + x.nom)).join(' et ')}</dd></dl>
+    <div class="actions">${btn('home','Non, garder ma réservation','sec')}${btn('a-confirm', deux ? 'Oui, annuler les 2 places' : 'Oui, annuler cette réservation','danger gros')}</div>`));
 }
 A['a-confirm'] = async () => {
   loading('Annulation en cours…');
-  const r = S.cancel;
-  await updateRecs('reservations', [{id:r.id, f:{statut:'Annulée'}}]);
-  const txt = `${fmtDate(r.date)}, de ${plage(r)}`;
-  const vars = {prenom:r.prenom, nom:r.nom, 'e-mail':r.email, date:fmtDate(r.date), heure:plage(r)};
+  const r = S.cancel, grp = S.cancelGroup?.length ? S.cancelGroup : [r];
+  await updateRecs('reservations', grp.map(x => ({id:x.id, f:{statut:'Annulée'}})));
+  const txt = `${fmtDate(r.date)}, de ${plage(r)}${grp.length > 1 ? ' (2 places)' : ''}`;
+  const vars = {prenom:r.prenom, nom:r.nom, 'e-mail':r.email, date:fmtDate(r.date), heure:plage(r) + (grp.length > 1 ? ` (2 places, avec ${grp[1].prenom} ${grp[1].nom})` : '')};
   const mu = await mailUser(r.email, 'annulation', vars);
   await mailAdmins('adminAnnul', {...vars, 'annulé par':'la personne elle-même'}, 'annul');
   SON.annul();
@@ -594,7 +626,8 @@ A['a-confirm'] = async () => {
 };
 async function cancelByLink(token){
   loading('Vérification du lien…');
-  const r = (await listAll('reservations')).map(parseResa).find(x => x.token === token && x.ok);
+  const grp = (await listAll('reservations')).map(parseResa).filter(x => x.token === token && x.ok), r = grp[0];
+  S.cancelGroup = grp;
   if(!r) return show(card(`<h2>Lien d'annulation invalide</h2><p>Ce lien est incorrect, ou la réservation est déjà annulée.</p><div class="actions">${btn('home','Retour à l\'accueil')}</div>`));
   S.cancel = r; S.who.email = r.email; renderCancelConfirm();
 }
