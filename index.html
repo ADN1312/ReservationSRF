@@ -2,7 +2,8 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1b3a5c">
 <title>Résa.SREF – Réservation de créneaux</title>
 <style>
 :root{--bleu:#1b3a5c;--bleu2:#2c5f8a;--fond:#f6f4ef;--blanc:#fff;--texte:#1a1a1a;--gris:#555d6b;--bord:#c9ced6;--ok:#14663a;--err:#a31616;--accent:#e0a030}
@@ -54,7 +55,6 @@ dl{display:grid;grid-template-columns:max-content 1fr;gap:.4rem 1.2rem;backgroun
 dt{color:var(--gris)}dd{margin:0;font-weight:600}
 .tabs{list-style:none;display:flex;flex-wrap:wrap;gap:.4rem;padding:0;margin:0 0 1.2rem}
 .tab{padding:.5rem .9rem;border:2px solid var(--bord);border-radius:8px;background:#fff;color:var(--bleu);font-weight:600;min-height:44px}
-.qui{display:flex;align-items:center;gap:.6rem;margin-left:auto;color:var(--gris)}.qui strong{color:var(--texte)}
 .tab[aria-current=page]{background:var(--bleu);color:#fff;border-color:var(--bleu)}
 .slotcard{border:1px solid var(--bord);border-radius:10px;padding:.8rem 1rem;margin-bottom:.7rem}
 .slotcard h4{margin:0 0 .3rem;color:var(--bleu)}
@@ -62,20 +62,59 @@ dt{color:var(--gris)}dd{margin:0;font-weight:600}
 .badge{display:inline-block;padding:.1rem .6rem;border-radius:99px;font-size:.85rem;font-weight:600;background:#e1f4e8;color:var(--ok)}
 .badge.plein{background:#fde8e8;color:var(--err)}
 table{border-collapse:collapse;width:100%}th,td{border:1px solid var(--bord);padding:.4rem .6rem;text-align:left}caption{text-align:left;font-weight:700;margin:.8rem 0 .3rem;color:var(--bleu)}
-.lien{background:none;border:0;color:var(--bleu);text-decoration:underline;cursor:pointer;padding:.5rem}
 footer{text-align:center;padding:1.5rem 1rem;color:var(--gris)}
 .journal li{padding:.5rem .8rem;background:var(--fond);border-radius:8px;margin-bottom:.4rem}
 .journal small{display:block;color:var(--gris)}
-@media (max-width:520px){dl{grid-template-columns:1fr}.card{padding:1.1rem}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 .aide{margin:.25rem 0 0;font-size:.95em}
 [aria-invalid=true]{border-color:var(--err)!important}
+/* Logo, boutons et espace administrateur */
+.entete{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:1rem;max-width:1040px;margin:0 auto}
+.marque{display:flex;flex-direction:column;align-items:flex-start;gap:.35rem}
+.logo{height:64px;width:auto;background:#fff;border-radius:10px;padding:5px 8px;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.site-unadev{display:inline-flex;align-items:center;gap:.3rem;font-size:.8rem;font-weight:600;color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.55);border-radius:99px;padding:.15rem .65rem;min-height:28px}
+.site-unadev:hover{background:#fff;color:var(--bleu)}
+.titre{text-align:center}
+.outils{justify-self:end}
+.son-btn{display:inline-flex;align-items:center;gap:.35rem;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.55);border-radius:99px;padding:.3rem .75rem;font-size:.85rem;font-weight:600;cursor:pointer;min-height:34px}
+.son-btn:hover{background:rgba(255,255,255,.15)}
+.son-btn.coupe{opacity:.75}.son-btn.coupe .ondes{display:none}
+.defile{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:.4rem 0}
+.btn.petit{padding:.4rem .9rem;min-height:38px;font-size:.92rem;border-radius:8px}
+.btn.danger-sec{background:#fff;color:var(--err);border-color:#e3b1b1}.btn.danger-sec:hover{background:var(--err);color:#fff;border-color:var(--err)}
+footer .btn.sec{color:var(--gris);border-color:var(--bord)}
+body.admin footer{display:none}
+body.admin main{max-width:1040px}
+.adm-barre{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;background:var(--blanc);border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.08);padding:.9rem 1.2rem;margin-bottom:1rem;border-left:6px solid var(--accent)}
+.qui{display:flex;flex-direction:column;color:var(--gris)}.qui strong{color:var(--texte);font-weight:700}
+.qui-titre{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--bleu2);font-weight:700}
+.btn.deco{display:inline-flex;align-items:center;gap:.5rem;background:#fff;color:var(--bleu);border-color:var(--bleu);border-radius:99px;padding:.5rem 1.1rem}
+.btn.deco:hover{background:var(--bleu);color:#fff}
+.adm-nav{margin-bottom:1rem}
+.adm-nav .tabs{margin:0;gap:.35rem;background:var(--blanc);padding:.4rem;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.adm-nav .tab{border:0;border-radius:8px;background:transparent;padding:.55rem .95rem}
+.adm-nav .tab:hover{background:#eef2f7}
+.adm-nav .tab[aria-current=page]{background:var(--bleu);color:#fff}
+.adm-contenu h2{padding-bottom:.6rem;border-bottom:2px solid #eef2f7}
+.adm-contenu h3{margin-top:1.8rem}
+.rangs{list-style:none;margin:0;padding:0;border:1px solid var(--bord);border-radius:10px;overflow:hidden}
+.rangs li{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding:.6rem .9rem;background:#fff}
+.rangs li+li{border-top:1px solid #e6e8ec}
+.rangs li:nth-child(even){background:#fafbfc}
+.discret{color:var(--gris);font-size:.95em}
+.slotcard{background:#fff}.slotcard h4{display:flex;align-items:center;justify-content:space-between;gap:.6rem}
+.slotcard .rangs{margin-top:.5rem;padding:0}
+.adm-contenu form{background:#fafbfc;border:1px solid #e6e8ec;border-radius:12px;padding:1rem 1.2rem;margin-bottom:1rem}
+.adm-contenu form h3{margin-top:0}
+.adm-contenu form .champ{max-width:34rem}.adm-contenu form .rg-mail .champ{max-width:none}
+.adm-contenu table th{background:#eef2f7}
 /* Jean-Jacques */
 .rg-mail{border:1px solid var(--bord);border-radius:10px;padding:1rem;margin:0 0 1rem}
 textarea{width:100%;padding:.65rem .8rem;border:2px solid var(--bord);border-radius:8px;background:#fff}
-.jj{margin-top:2rem;padding-top:.8rem;border-top:1px dashed var(--bord);text-align:center;font-size:.85rem;color:var(--gris)}
-.jj .lien{font-size:.85rem;color:var(--gris);font-style:italic}
-.jj-plaque{max-width:30rem;margin:.6rem auto 0;padding:.8rem 1rem;border:3px double #8a7a5a;border-radius:6px;background:#f3eee2;color:#4a3f2a;font-family:Georgia,serif}
+.jj{position:fixed;left:.5rem;bottom:.4rem;z-index:5;max-width:min(22rem,calc(100vw - 1rem))}
+.jj-btn{background:none;border:0;padding:.2rem .3rem;font:italic .72rem/1.2 Georgia,serif;color:var(--gris);opacity:.45;cursor:pointer}
+.jj-btn:hover,.jj-btn:focus-visible,.jj-btn[aria-expanded=true]{opacity:1}
+.jj-plaque{position:absolute;bottom:1.8rem;left:0;width:22rem;max-width:calc(100vw - 1rem);box-shadow:0 6px 24px rgba(0,0,0,.25);padding:.8rem 1rem;border:3px double #8a7a5a;border-radius:6px;background:#f3eee2;color:#4a3f2a;font-family:Georgia,serif}
 .jj-plaque p{margin:.3rem 0}.jj-indice{font-style:italic;font-size:.9em}
 .jj-scene{position:fixed;inset:0;z-index:50;pointer-events:none;overflow:hidden;background:linear-gradient(rgba(8,14,30,.78),rgba(8,14,30,.78) 60%,rgba(20,55,95,.9));animation:jjFond 10s ease-in-out forwards}
 .jj-bateau{position:absolute;bottom:12%;left:0;width:min(70vw,460px);animation:jjVogue 10s linear forwards}
@@ -89,14 +128,50 @@ textarea{width:100%;padding:.65rem .8rem;border:2px solid var(--bord);border-rad
 @keyframes jjTexte{0%,12%{opacity:0}22%,85%{opacity:1}100%{opacity:0}}
 @keyframes jjFond{0%{opacity:0}8%,90%{opacity:1}100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.jj-bateau{left:50%;transform:translateX(-50%)}.jj-texte,.jj-scene{opacity:1}}
+/* ---------- Petits écrans (téléphones) ---------- */
+@media (max-width:640px){
+  body{font-size:1rem}
+  header{padding:.7rem .8rem .9rem}
+  .entete{grid-template-columns:1fr auto;grid-template-areas:"marque outils" "titre titre";gap:.5rem .8rem}
+  .marque{grid-area:marque;flex-direction:row;align-items:center;gap:.6rem}.outils{grid-area:outils}.titre{grid-area:titre}
+  .logo{height:42px;padding:3px 6px}
+  header h1{font-size:1.45rem}header p{font-size:.88rem}
+  main{margin:.9rem auto;padding:0 .7rem}
+  .card{padding:1rem;border-radius:12px}
+  h2{font-size:1.22rem;margin-bottom:.8rem}h3{font-size:1.05rem}
+  .btn{padding:.6rem 1rem;font-size:.97rem}
+  .btn.gros{font-size:1.05rem;padding:.8rem 1.1rem}
+  .actions{gap:.6rem}.actions .btn{flex:1 1 auto}
+  .btn-grand{padding:.95rem 1rem}.btn-grand strong{font-size:1.1rem}
+  .choix-btn{flex-wrap:wrap;gap:.2rem .8rem;padding:.75rem .9rem}
+  dl{grid-template-columns:1fr;gap:.1rem}dd{margin-bottom:.5rem}
+  input[type=text],input[type=email],input[type=password],input[type=date],input[type=number],select,textarea{font-size:16px}
+  .rappel input{width:24px;height:24px}
+  body.admin main{padding:0 .5rem}
+  .adm-barre{padding:.7rem .9rem;margin-bottom:.6rem}
+  .btn.deco{padding:.4rem .8rem;font-size:.9rem;min-height:38px}
+  .adm-nav .tabs{display:grid;grid-template-columns:1fr 1fr;gap:.25rem;padding:.3rem}
+  .adm-nav .tab{width:100%;padding:.5rem .4rem;font-size:.9rem;min-height:40px;line-height:1.2}
+  .rangs li{padding:.55rem .7rem;gap:.4rem .8rem}
+  .rangs li .btn{margin-left:auto}
+  .slotcard{padding:.7rem .8rem}
+  .adm-contenu form{padding:.8rem .8rem}
+  table{font-size:.92rem}th,td{padding:.35rem .45rem}
+  .jj{position:static;margin:1.5rem 0 .5rem;max-width:none}.jj-plaque{position:static;width:auto;margin-top:.5rem}.jj-btn{font-size:.68rem}
+}
 </style>
 </head>
 <body>
 <a class="skip" href="#app">Aller au contenu</a>
-<header><h1>Résa.SREF</h1><p>Réservation de créneaux · Salles de remise en forme</p></header>
+<header><div class="entete">
+  <div class="marque"><img class="logo" src="logo-unadev.png" alt="Logo UNADEV" onerror="this.remove()">
+    <a class="site-unadev" href="https://www.unadev.com/" target="_blank" rel="noopener" aria-label="Site officiel de l'UNADEV (nouvel onglet)">unadev.com<svg aria-hidden="true" viewBox="0 0 24 24" width="13" height="13"><path d="M14 4h6v6M20 4l-9 9M18 14v5H5V6h5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>
+  <div class="titre"><h1>Résa.SREF</h1><p>Réservation de créneaux · Salles de remise en forme</p></div>
+  <div class="outils"><button type="button" class="son-btn" id="son-btn" aria-pressed="true"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path class="ondes" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Sons</span></button></div>
+</div></header>
 <main id="app" tabindex="-1"><noscript>Ce site nécessite JavaScript.</noscript></main>
 <div id="live" class="sr-only" role="status" aria-live="polite"></div>
-<footer><button class="lien" data-act="admin">Espace administrateur</button></footer>
+<footer><button type="button" class="btn sec petit" data-act="admin">Espace administrateur</button></footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4.4.1/dist/email.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -133,7 +208,11 @@ const store = {
   set(k,v){ try{ v ? localStorage.setItem(k,v) : localStorage.removeItem(k); }catch{} }
 };
 function announce(t){ const l = document.getElementById('live'); l.textContent = ''; setTimeout(() => l.textContent = t, 50); }
-function show(html){ app.innerHTML = html; const h = app.querySelector('h2'); if(h){ h.tabIndex = -1; h.focus(); } window.scrollTo(0,0); }
+function show(html){
+  app.innerHTML = html; window.scrollTo(0,0);
+  const h = app.querySelector('h2'); if(!h) return; h.tabIndex = -1; h.focus({preventScroll:true});
+  setTimeout(() => { if(h.isConnected && document.activeElement !== h) h.focus({preventScroll:true}); }, 120);   // 2e essai pour les lecteurs d'écran mobiles
+}
 const card = h => `<section class="card">${h}</section>`;
 const msg = (t, x) => x ? `<p class="msg ${t}">${esc(x)}</p>` : '';
 const loading = (t='Un instant…') => { app.innerHTML = card(`<p>${esc(t)}</p>`); announce(t); };
@@ -141,7 +220,7 @@ const loading = (t='Un instant…') => { app.innerHTML = card(`<p>${esc(t)}</p>`
 function fieldError(form, id, m){
   form.querySelectorAll('[aria-invalid]').forEach(x => x.removeAttribute('aria-invalid'));
   let p = form.querySelector('.msg.err'); if(!p){ p = document.createElement('p'); p.className = 'msg err'; form.prepend(p); }
-  p.textContent = m; const el = document.getElementById(id);
+  p.textContent = m; SON.err(); const el = document.getElementById(id);
   if(el){ el.setAttribute('aria-invalid', 'true'); el.focus(); }
   announce(m);
 }
@@ -346,8 +425,9 @@ async function logAction(action, details){
 const S = {plan:null, date:null, sel:[], who:{prenom:'', nom:'', email: store.get('resa-sref-email')}, cancelList:[], cancel:null, admin:null, ferm:null, params:{}, paramIds:{}};
 const A = {};
 document.addEventListener('click', e => {
-  const el = e.target.closest('[data-act]'); if(!el || el.getAttribute('aria-disabled') === 'true') return;
-  const fn = A[el.dataset.act]; if(fn){ e.preventDefault(); run(() => fn(el.dataset, el)); }
+  const el = e.target.closest('[data-act]'); if(!el) return;
+  if(el.getAttribute('aria-disabled') === 'true'){ SON.err(); return; }
+  const fn = A[el.dataset.act]; if(fn){ e.preventDefault(); if(CLICS.has(el.dataset.act)) SON.clic(); run(() => fn(el.dataset, el)); }
 });
 document.addEventListener('submit', e => {
   const f = e.target.closest('[data-form]'); if(!f) return; e.preventDefault();
@@ -368,6 +448,7 @@ async function run(fn){
   try{ await fn(); }catch(err){ showError(err); }finally{ busy = false; }
 }
 function showError(err){
+  SON.err();
   const s = err.status;
   const t = s === 401 ? 'Le jeton Airtable est refusé. Il faut en créer un nouveau.'
     : s === 403 ? 'Airtable refuse cette opération : le jeton n\'a pas la permission nécessaire.'
@@ -379,7 +460,7 @@ function showError(err){
 }
 
 /* ====================== ACCUEIL ====================== */
-function home(){
+function home(){ document.body.classList.remove('admin');
   show(card(`<h2>Que souhaitez-vous faire ?</h2><div class="choix">
     <button class="btn-grand" data-act="r-start"><strong>Réserver</strong><span>Choisir une date et un créneau</span></button>
     <button class="btn-grand" data-act="a-start"><strong>Annuler</strong><span>Annuler une réservation existante</span></button></div>`));
@@ -408,7 +489,7 @@ function renderSlots(err){
   }).join('');
   show(card(`<h2>Étape 2 sur 4 : choisir l'heure</h2>${msg('err', err)}<p>${esc(cap1(fmtDate(S.date)))}</p>
     <ul class="liste">${items}</ul><div class="actions">${btn('r-back-dates','Retour','sec')}</div>`));
-  if(err) announce(err);
+  if(err){ announce(err); SON.err(); }
 }
 A['r-back-dates'] = renderDates;
 A['r-slot'] = d => { S.sel = [d.id]; renderWho(); };
@@ -421,7 +502,7 @@ function renderWho(err){
     <div class="champ"><label for="email">Adresse e-mail</label><input id="email" name="email" type="email" autocomplete="email" spellcheck="false" autocapitalize="off" required value="${esc(w.email)}">
       <div class="rappel"><input id="rappel" name="rappel" type="checkbox" ${store.get('resa-sref-email') ? 'checked' : ''}><label for="rappel">Se souvenir de moi sur cet appareil</label></div></div>
     <div class="actions">${btn('r-back-slots','Retour','sec')}<button class="btn" type="submit">Continuer</button></div></form>`));
-  if(err) announce(err);
+  if(err){ announce(err); SON.err(); }
 }
 A['r-back-slots'] = () => renderSlots();
 A['r-who'] = fd => {
@@ -462,6 +543,7 @@ A['r-confirm'] = async () => {
   }
   await mailAdmins('adminResa', {prenom:w.prenom, nom:w.nom, 'e-mail':w.email, date:fmtDate(rows[0].date), heure:rows.map(plage).join(', ')}, 'resa');
   S.sel = [];
+  SON.ok();
   show(card(`<h2>Réservation confirmée</h2>${msg('ok', `Créneau réservé pour le ${fmtDate(rows[0].date)}, de ${plage(rows[0])}.`)}
     ${fails ? msg('err', 'Votre réservation est bien enregistrée, mais l\'e-mail de confirmation n\'a pas pu être envoyé. Notez bien la date et l\'heure.') : `<p>Un e-mail de confirmation a été envoyé à ${esc(w.email)}.</p>`}
     <div class="actions">${btn('r-start','Réserver un autre créneau')}${btn('home','Retour à l\'accueil','sec')}</div>`));
@@ -475,7 +557,7 @@ function renderCancelEmail(err){
     <input id="email" name="email" type="email" autocomplete="email" spellcheck="false" autocapitalize="off" required value="${esc(S.who.email)}">
     <div class="rappel"><input id="rappel" name="rappel" type="checkbox" ${store.get('resa-sref-email') ? 'checked' : ''}><label for="rappel">Se souvenir de moi sur cet appareil</label></div></div>
     <div class="actions">${btn('home','Retour','sec')}<button class="btn" type="submit">Rechercher mes réservations</button></div></form>`));
-  if(err) announce(err);
+  if(err){ announce(err); SON.err(); }
 }
 A['a-email'] = async fd => {
   const email = fd.get('email').trim(); S.who.email = email; store.set('resa-sref-email', fd.get('rappel') ? email : '');
@@ -505,6 +587,7 @@ A['a-confirm'] = async () => {
   const vars = {prenom:r.prenom, nom:r.nom, 'e-mail':r.email, date:fmtDate(r.date), heure:plage(r)};
   const mu = await mailUser(r.email, 'annulation', vars);
   await mailAdmins('adminAnnul', {...vars, 'annulé par':'la personne elle-même'}, 'annul');
+  SON.annul();
   show(card(`<h2>Réservation annulée</h2>${msg('ok', `Votre réservation du ${txt} est annulée.`)}${mu.ok ? '' : msg('info','L\'e-mail de confirmation n\'a pas pu être envoyé, mais l\'annulation est bien enregistrée.')}
     <div class="actions">${btn('home','Retour à l\'accueil')}</div>`));
 };
@@ -525,7 +608,7 @@ function renderLogin(admins, err){
   show(card(`<h2>Espace administrateur</h2>${msg('err', err)}<form data-form="login" novalidate>
     <div class="champ"><label for="pin">Code PIN à 4 chiffres</label><input id="pin" name="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" required></div>
     <div class="actions">${btn('home','Retour','sec')}<button class="btn" type="submit">Se connecter</button></div></form>`));
-  if(err) announce(err);
+  if(err){ announce(err); SON.err(); }
 }
 const adminForm = (act, label) => `<form data-form="${act}" novalidate>
   <div class="champ"><label for="a-prenom">Prénom</label><input id="a-prenom" name="prenom" type="text" spellcheck="false" required></div>
@@ -560,11 +643,14 @@ A['first-admin'] = async (fd, form) => {
 const TABS = [['planning','Planning'],['creneaux','Créneaux'],['fermeture','Fermeture exceptionnelle'],['admins','Administrateurs'],['reglages','Réglages des e-mails'],['journal','Journal'],['export','Export Excel'],['diag','Diagnostic']];
 function shell(tab, inner){
   const title = TABS.find(t => t[0] === tab)[1];
-  show(`<section class="card"><nav aria-label="Sections de l'administration"><ul class="tabs">${TABS.map(([k,l]) => `<li><button class="tab" data-act="tab" data-tab="${k}" ${k === tab ? 'aria-current="page"' : ''}>${l}</button></li>`).join('')}
-    <li class="qui"><span>Connecté : <strong>${esc(S.admin.full)}</strong></span><button class="tab" data-act="logout">Se déconnecter<span class="sr-only"> (${esc(S.admin.full)})</span></button></li></ul></nav><h2>${title}</h2>${inner}${JJ.plaque()}</section>`);
+  document.body.classList.add('admin');
+  show(`<div class="adm-barre"><div class="qui"><span class="qui-titre">Espace administrateur</span><span>Connecté : <strong>${esc(S.admin.full)}</strong></span></div>
+      <button type="button" class="btn deco" data-act="logout"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><path d="M10 4H5v16h5M15 8l4 4-4 4M19 12H9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Se déconnecter<span class="sr-only"> (${esc(S.admin.full)})</span></button></div>
+    <nav class="adm-nav" aria-label="Sections de l'administration"><ul class="tabs">${TABS.map(([k,l]) => `<li><button type="button" class="tab" data-act="tab" data-tab="${k}" ${k === tab ? 'aria-current="page"' : ''}>${l}</button></li>`).join('')}</ul></nav>
+    <section class="card adm-contenu"><h2>${title}</h2>${inner}</section>${JJ.plaque()}`);
 }
 A.tab = d => adminTab(d.tab);
-A.logout = () => { S.admin = null; home(); };
+A.logout = () => { S.admin = null; document.body.classList.remove('admin'); home(); };
 async function adminTab(tab, note){
   loading();
   const f = {planning:tabPlanning, creneaux:tabCreneaux, fermeture:tabFermeture, admins:tabAdmins, reglages:tabReglages, journal:tabJournal, export:tabExport, diag:tabDiag}[tab];
@@ -579,10 +665,10 @@ async function tabPlanning(){
   const t = todayISO(), ups = plan.slots.filter(s => s.date >= t);
   if(!ups.length) return '<p>Aucun créneau à venir. Ouvrez la section « Créneaux » pour en ajouter.</p>';
   const days = [...new Set(ups.map(s => s.date))];
-  return days.map(d => `<h3>${esc(fmtDate(d))}</h3>` + ups.filter(s => s.date === d).map(s => `<div class="slotcard"><h4>${s.debut} à ${s.fin}
+  return days.map(d => `<h3>${esc(cap1(fmtDate(d)))}</h3>` + ups.filter(s => s.date === d).map(s => `<div class="slotcard"><h4>${plage(s)}
     <span class="badge ${s.closed || s.full ? 'plein' : ''}">${s.closed ? 'Fermé' : `${s.taken} sur ${s.cap} ${plural(s.cap,'place','places')}`}</span></h4>
-    ${s.people.length ? `<ul>${s.people.map(p => `<li>${esc(p.prenom)} ${esc(p.nom)}, ${esc(p.email)}
-      <button class="lien" data-act="adm-cancel" data-id="${p.id}" aria-label="Annuler la réservation de ${esc(p.prenom)} ${esc(p.nom)} le ${esc(fmtShort(s.date))} à ${s.debut}">Annuler</button></li>`).join('')}</ul>` : '<p>Aucune inscription.</p>'}</div>`).join('')).join('');
+    ${s.people.length ? `<ul class="rangs">${s.people.map(p => `<li><span><strong>${esc(p.prenom)} ${esc(p.nom)}</strong> <span class="discret">${esc(p.email)}</span></span>
+      ${btn('adm-cancel', 'Annuler', 'petit danger-sec', `data-id="${p.id}" aria-label="Annuler la réservation de ${esc(p.prenom)} ${esc(p.nom)} le ${esc(fmtShort(s.date))}, de ${plage(s)}"`)}</li>`).join('')}</ul>` : '<p class="discret">Aucune inscription.</p>'}</div>`).join('')).join('');
 }
 A['adm-cancel'] = async d => {
   const r = S.plan.resas.find(x => x.id === d.id); if(!r) return;
@@ -594,6 +680,7 @@ A['adm-cancel'] = async d => {
   const m = await mailUser(r.email, 'annulationEquipe', vars);
   await mailAdmins('adminAnnul', {...vars, 'annulé par':S.admin.full}, 'annul', S.admin.id);
   await logAction('Annulation de réservation', `${r.prenom} ${r.nom}, ${txt}`);
+  SON.annul();
   adminTab('planning', {t: m.ok ? 'ok' : 'info', m: m.ok ? 'Réservation annulée et personne prévenue.' : 'Réservation annulée, mais l\'e-mail n\'a pas pu être envoyé.'});
 };
 
@@ -608,9 +695,9 @@ async function tabCreneaux(){
     <div class="champ"><label for="cr-f">Heure de fermeture</label><select id="cr-f" name="f" required><option value="">Choisir</option>${heures(6,23)}</select></div>
     <div class="champ"><label for="cr-n">Nombre de places par créneau</label><input id="cr-n" name="n" type="number" min="1" max="200" required></div>
     <div class="actions"><button class="btn" type="submit">Créer les créneaux</button></div></form>
-    <h3>Jours ouverts à la réservation</h3>${days.length ? `<ul class="liste">${days.map(d => {
+    <h3>Jours ouverts à la réservation</h3>${days.length ? `<ul class="rangs">${days.map(d => {
       const n = plan.slots.filter(s => s.date === d).length;
-      return `<li>${esc(fmtDate(d))} : ${n} ${plural(n,'créneau','créneaux')} ${btn('cr-del','Supprimer ce jour','sec',`data-date="${d}" aria-label="Supprimer les créneaux du ${esc(fmtDate(d))}"`)}</li>`; }).join('')}</ul>` : '<p>Aucun jour ouvert.</p>'}`;
+      return `<li><span><strong>${esc(cap1(fmtDate(d)))}</strong> <span class="discret">${n} ${plural(n,'créneau','créneaux')}</span></span>${btn('cr-del','Supprimer ce jour','petit danger-sec',`data-date="${d}" aria-label="Supprimer les créneaux du ${esc(fmtDate(d))}"`)}</li>`; }).join('')}</ul>` : '<p>Aucun jour ouvert.</p>'}`;
 }
 A['cr-add'] = async (fd, form) => {
   const date = fd.get('date'), o = fd.get('o'), f = fd.get('f'), n = parseInt(fd.get('n'), 10);
@@ -663,7 +750,7 @@ function renderFermSlots(err){
     ${f.slots.map(s => `<label class="slot ${s.closed ? 'off' : ''}"><input type="checkbox" name="slot" value="${s.id}" ${s.closed ? 'disabled' : ''}><span>${s.debut} à ${s.fin}</span>
       <span class="etat">${s.closed ? 'Déjà fermé, indisponible' : `${s.taken} ${plural(s.taken,'inscrit','inscrits')}`}</span></label>`).join('')}</fieldset>
     <div class="actions">${btn('tab','Annuler','sec','data-tab="fermeture"')}<button class="btn" type="submit">Voir l'impact</button></div></form>`);
-  if(err) announce(err);
+  if(err){ announce(err); SON.err(); }
 }
 A['f-slots'] = fd => {
   const f = S.ferm, all = !!fd.get('all'), ids = fd.getAll('slot');
@@ -679,11 +766,11 @@ function renderFermImpact(err){
   const f = S.ferm, n = new Set(f.impact.map(r => r.email.toLowerCase())).size;
   shell('fermeture', `<p>Étape 2 sur 3 : vérifier l'impact et le message.</p>${msg('err', err)}
     <p><strong>${n} ${plural(n,'personne sera notifiée','personnes seront notifiées')}</strong> et ${f.impact.length} ${plural(f.impact.length,'réservation sera annulée','réservations seront annulées')}.</p>
-    ${f.impact.length ? `<table><caption>Personnes concernées</caption><thead><tr><th scope="col">Nom</th><th scope="col">E-mail</th><th scope="col">Créneau</th></tr></thead><tbody>${f.impact.map(r => `<tr><td>${esc(r.prenom)} ${esc(r.nom)}</td><td>${esc(r.email)}</td><td>${r.debut} à ${r.fin}</td></tr>`).join('')}</tbody></table>` : ''}
+    ${f.impact.length ? `<div class="defile" role="region" aria-label="Personnes concernées" tabindex="0"><table><caption>Personnes concernées</caption><thead><tr><th scope="col">Nom</th><th scope="col">E-mail</th><th scope="col">Créneau</th></tr></thead><tbody>${f.impact.map(r => `<tr><td>${esc(r.prenom)} ${esc(r.nom)}</td><td>${esc(r.email)}</td><td>${plage(r)}</td></tr>`).join('')}</tbody></table></div>` : ''}
     <form data-form="f-send"><div class="champ"><label for="f-msg">Message envoyé aux personnes concernées</label><textarea id="f-msg" name="message" rows="9" aria-describedby="f-msg-aide">${esc(f.message)}</textarea>
       <p id="f-msg-aide" class="aide">[prénom], [nom] et [heure] seront remplacés pour chaque personne.</p></div>
     <div class="actions">${btn('f-back','Retour','sec')}<button class="btn danger gros" type="submit">${n ? 'Envoyer les notifications' : 'Enregistrer la fermeture'}</button></div></form>`);
-  if(err) announce(err);
+  if(err){ announce(err); SON.err(); }
 }
 A['f-back'] = () => renderFermSlots();
 A['f-send'] = async fd => {
@@ -703,6 +790,7 @@ A['f-send'] = async fd => {
   await mailAdmins('adminFerm', {administrateur:S.admin.full, date:fmtDate(f.date), horaires:f.horaires, nombre:String(f.impact.length)}, null, S.admin.id);
   await logAction('Fermeture exceptionnelle', `${fmtShort(f.date)} ${f.all ? 'toute la journée' : f.chosen.map(s => s.debut + '-' + s.fin).join(', ')} : ${f.impact.length} réservations annulées, ${sent} e-mails envoyés`);
   S.ferm = null;
+  SON.annul();
   shell('fermeture', `<p class="msg ${failed.length ? 'err' : 'ok'}">Fermeture enregistrée : ${f.impact.length} ${plural(f.impact.length,'réservation annulée','réservations annulées')}, ${sent} sur ${n} ${plural(n,'e-mail envoyé','e-mails envoyés')}.</p>
     ${failed.length ? `<p>E-mails non envoyés (à prévenir autrement) : ${failed.map(esc).join(', ')}</p>` : ''}<div class="actions">${btn('tab','Retour au planning','',`data-tab="planning"`)}</div>`);
   announce(`Fermeture enregistrée. ${sent} e-mails envoyés sur ${n}.`);
@@ -711,7 +799,7 @@ A['f-send'] = async fd => {
 /* ----- Administrateurs ----- */
 async function tabAdmins(){
   const admins = await loadAdmins(); S.admins = admins;
-  return `<ul class="liste">${admins.map(a => `<li>${esc(a.full)}, ${esc(a.email)} ${admins.length > 1 ? btn('adm-del','Supprimer','sec',`data-id="${a.id}" aria-label="Supprimer l'administrateur ${esc(a.full)}"`) : ''}</li>`).join('')}</ul>
+  return `<ul class="rangs">${admins.map(a => `<li><span><strong>${esc(a.full)}</strong>${a.id === S.admin.id ? ' <span class="badge">vous</span>' : ''} <span class="discret">${esc(a.email)}</span></span>${admins.length > 1 ? btn('adm-del','Supprimer','petit danger-sec',`data-id="${a.id}" aria-label="Supprimer l'administrateur ${esc(a.full)}"`) : ''}</li>`).join('')}</ul>
     <h3>Ajouter un administrateur</h3><p>Il recevra les e-mails de notification et aura les mêmes droits que vous.</p>${adminForm('adm-add','Ajouter l\'administrateur')}`;
 }
 A['adm-add'] = async (fd, form) => {
@@ -811,9 +899,9 @@ A.exp = async fd => {
 
 /* ----- Diagnostic ----- */
 function tabDiag(){
-  return `<p>Vérifie que chaque table et chaque colonne attendues ont été trouvées dans Airtable.</p><table><caption>Tables Airtable</caption><thead><tr><th scope="col">Table</th><th scope="col">Trouvée sous le nom</th><th scope="col">Colonnes manquantes</th></tr></thead><tbody>
+  return `<p>Vérifie que chaque table et chaque colonne attendues ont été trouvées dans Airtable.</p><div class="defile" role="region" aria-label="Tables Airtable" tabindex="0"><table><caption>Tables Airtable</caption><thead><tr><th scope="col">Table</th><th scope="col">Trouvée sous le nom</th><th scope="col">Colonnes manquantes</th></tr></thead><tbody>
     ${Object.entries(SCHEMA).map(([k,s]) => `<tr><td>${esc(s.label)}</td><td>${s.missingTable ? (s.optional ? 'Introuvable (facultative : nécessaire aux réglages des e-mails)' : 'Introuvable') : esc(s.realName)}</td><td>${s.missingTable ? '' : s.absent.length ? esc(s.absent.join(', ')) : 'Aucune'}</td></tr>`).join('')}</tbody></table>
-    <h3>E-mail de test</h3><p>Envoie un message à votre adresse (${esc(S.admin.email)}) pour vérifier EmailJS.</p><div class="actions">${btn('diag-mail','Envoyer un e-mail de test')}</div>`;
+    </div><h3>E-mail de test</h3><p>Envoie un message à votre adresse (${esc(S.admin.email)}) pour vérifier EmailJS.</p><div class="actions">${btn('diag-mail','Envoyer un e-mail de test')}</div>`;
 }
 A['diag-mail'] = async () => {
   loading(); const r = await send(S.admin.email, 'Test Résa.SREF', 'Ce message confirme que l\'envoi d\'e-mails fonctionne.');
@@ -829,7 +917,7 @@ const JJ = {
   INDICE: 'Paraît qu\'il répond encore quand on l\'appelle par son nom. Encore faut-il savoir taper.',
   tape: '', enCours: false,
   plaque(){
-    return `<div class="jj"><button type="button" class="lien" data-act="jj" aria-expanded="false" aria-controls="jj-plaque">En mémoire de Jean-Jacques</button>
+    return `<div class="jj"><button type="button" class="jj-btn" data-act="jj" aria-expanded="false" aria-controls="jj-plaque">En mémoire de Jean-Jacques</button>
       <div id="jj-plaque" class="jj-plaque" hidden><p>${esc(this.PLAQUE)}</p><p class="jj-indice">${esc(this.INDICE)}</p></div></div>`;
   },
   scene(){
@@ -895,6 +983,35 @@ document.addEventListener('keydown', e => {
   JJ.tape = (JJ.tape + e.key.toLowerCase()).replace(/[^a-z]/g, '').slice(-11);
   if(JJ.tape === 'jeanjacques'){ JJ.tape = ''; JJ.ceremonie(); }
 });
+
+/* ====================== SONS DISCRETS ======================
+   Synthétisés par le navigateur, sans fichier. Un bouton « Sons » dans l'en-tête les coupe ou les remet ; le choix est mémorisé. */
+const SON = {
+  actif: (() => { try{ return localStorage.getItem('resa-sons') !== 'non'; }catch{ return true; } })(),
+  ac: null,
+  ctx(){ const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return null;
+    if(!this.ac) this.ac = new AC(); if(this.ac.state === 'suspended') this.ac.resume(); return this.ac; },
+  note(f, debut, duree, vol = .12, type = 'sine'){
+    const ac = this.ctx(); if(!ac) return; const t = ac.currentTime + debut;
+    const o = ac.createOscillator(), g = ac.createGain(); o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .012); g.gain.exponentialRampToValueAtTime(.0001, t + duree);
+    o.connect(g).connect(ac.destination); o.start(t); o.stop(t + duree + .05);
+  },
+  jouer(fn){ if(!this.actif) return; try{ fn(); }catch{} },
+  ok(){ this.jouer(() => { this.note(1046.5, 0, .5, .09); this.note(1318.5, .09, .6, .08); this.note(1568, .18, .8, .06); }); },   // petit carillon montant
+  annul(){ this.jouer(() => { this.note(784, 0, .35, .08, 'triangle'); this.note(587.3, .12, .5, .07, 'triangle'); }); },      // deux notes qui descendent
+  err(){ this.jouer(() => { this.note(220, 0, .22, .07, 'triangle'); this.note(196, .1, .28, .06, 'triangle'); }); },          // son grave et doux
+  clic(){ this.jouer(() => this.note(1800, 0, .05, .035, 'triangle')); },                                                      // tic très bref
+  majBouton(){ const b = document.getElementById('son-btn'); if(!b) return;
+    b.setAttribute('aria-pressed', String(this.actif)); b.classList.toggle('coupe', !this.actif);
+    b.querySelector('span').textContent = this.actif ? 'Sons' : 'Sons coupés'; }
+};
+const CLICS = new Set(['r-start','a-start','r-date','r-slot','tab','logout','admin','r-back-dates','r-back-slots']);
+document.getElementById('son-btn').addEventListener('click', () => {
+  SON.actif = !SON.actif; try{ localStorage.setItem('resa-sons', SON.actif ? 'oui' : 'non'); }catch{}
+  SON.majBouton(); announce(SON.actif ? 'Sons activés.' : 'Sons coupés.'); if(SON.actif) SON.clic();
+});
+SON.majBouton();
 
 /* ====================== DÉMARRAGE ====================== */
 (async () => {
